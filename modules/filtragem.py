@@ -40,8 +40,8 @@ BANCO_FILTROS = [
     },
     {
         "modelo": "FM-40",
-        "volume_6h": 59,
-        "volume_8h": 78,
+        "volume_6h": 37,
+        "volume_8h": 50,
         "carga_areia_kg": 125,
         "quant_sacos_25kg": 5,
         "diametro_mm": 430,
@@ -52,8 +52,8 @@ BANCO_FILTROS = [
     },
     {
         "modelo": "FM-50",
-        "volume_6h": 37,
-        "volume_8h": 50,
+        "volume_6h": 59,
+        "volume_8h": 78,
         "carga_areia_kg": 65,
         "quant_sacos_25kg": 3,
         "diametro_mm": 525,
@@ -125,7 +125,7 @@ def run():
                 break
         
         if not filtro_selecionado:
-            st.error("Nenhum filtro disponível suporta este volume!")
+            st.error("Nenhum filto da linha FM atende a este volume de piscina. Considerar associação entre dois ou mais filtros em paralelo ou dimensionar modelo da linha FVP Sodramar")
             return
 
 
