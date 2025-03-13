@@ -215,12 +215,39 @@ def run():
                         st.write(f"- Modelo: {selected_pump['modelo']}")
                         st.write(f"- Potência: {selected_pump['potencia_cv']} CV")
                         st.write(f"- Vazão em {pressao_mca} m.c.a: {selected_pump[f'vazao_{pressao_mca}_mca']} m³/h")
-                        
-                        st.write("**Curva da MB:**")
+
+                        st.write("**Curva da Motobomba:**")
+                        # Preparar dados para o gráfico
+                        pressoes = []
+                        vazoes = []
                         for press in possible_pressures:
-                            key = f"vazao_{press}_mca"
-                            if selected_pump.get(key):
-                                st.write(f"- {press} m.c.a: {selected_pump[key]} m³/h")
+                            key = f'vazao_{press}_mca'
+                            if selected_pump.get(key) is not None:
+                                pressoes.append(press)
+                                vazoes.append(selected_pump[key])
+
+                        # Criar gráfico com Plotly
+                        if pressoes and vazoes:
+                            fig = go.Figure()
+                            fig.add_trace(go.Scatter(
+                                x=vazoes,
+                                y=pressoes,
+                                mode='lines+markers',
+                                name='Curva Característica',
+                                line=dict(color='#1f77b4', width=2)
+                            )
+
+                            fig.update_layout(
+                                title=f'Curva da Motobomba {selected_pump["modelo"]}',
+                                xaxis_title='Vazão (m³/h)',
+                                yaxis_title='Pressão (m.c.a)',
+                                template='plotly_white',
+                                height=400
+                            )
+
+                            st.plotly_chart(fig, use_container_width=True)
+                            else:
+                            st.warning("Dados insuficientes para plotar a curva")
                 else:
                     st.warning("""
                     **Recomendações:**
