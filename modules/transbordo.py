@@ -3,6 +3,7 @@ import math
 import streamlit as st
 import plotly.graph_objects as go
 
+# noinspection PyInterpreter
 BANCO_BOMBAS = [
     {
         "modelo": "BMC-25",
@@ -236,7 +237,7 @@ def run():
                                 mode='lines+markers',
                                 name='Curva Característica',
                                 line=dict(color='#1f77b4', width=2)
-                            )
+                            ))
 
                             fig.update_layout(
                                 title=f'Curva da Motobomba {selected_pump["modelo"]}',
@@ -244,10 +245,10 @@ def run():
                                 yaxis_title='Pressão (m.c.a)',
                                 template='plotly_white',
                                 height=400
-                            )
+                            ))
 
                             st.plotly_chart(fig, use_container_width=True)
-                            else:
+                        else:
                             st.warning("Dados insuficientes para plotar a curva")
                 else:
                     st.warning("""
