@@ -1,7 +1,7 @@
 import streamlit as st
 import bcrypt
 
-# Senhas hasheadas (correspondem a "gg")
+# Senhas hasheadas
 USERS = {
     "karine": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
     "reinaldo": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
