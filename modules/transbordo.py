@@ -237,18 +237,18 @@ def run():
                                 mode='lines+markers',
                                 name='Curva Característica',
                                 line=dict(color='#1f77b4', width=2)
-                            )
+                            ))  # ✅ Correção aqui
 
-                            fig.update_layout(  # 👈 Correção aqui
+                            fig.update_layout(
                                 title=f'Curva da Motobomba {selected_pump["modelo"]}',
                                 xaxis_title='Vazão (m³/h)',
                                 yaxis_title='Pressão (m.c.a)',
                                 template='plotly_white',
                                 height=400
-                            )  # ✅ Fechamento correto
+                            )
 
                             st.plotly_chart(fig, use_container_width=True)
-                            else:
+                        else:
                             st.warning("Dados insuficientes para plotar a curva")
                 else:
                     st.warning("""
