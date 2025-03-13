@@ -2,6 +2,7 @@
 import math
 import streamlit as st
 import plotly.graph_objects as go
+import numpy as np
 
 # noinspection PyInterpreter
 BANCO_BOMBAS = [
@@ -230,24 +231,58 @@ def run():
 
                         # Criar gráfico com Plotly
                         if pressoes and vazoes:
-                            fig = go.Figure()
-                            fig.add_trace(go.Scatter(
-                                x=vazoes,
-                                y=pressoes,
-                                mode='lines+markers',
-                                name='Curva Característica',
-                                line=dict(color='#1f77b4', width=2)
-                            ))  # ✅ Correção aqui
+                            # --- NOVO CÓDIGO A PARTIR DAQUI ---
+                            try:
+                                # Converte para arrays numpy e ordena
+                                x = np.array(vazoes)
+                                y = np.array(pressoes)
+                                sort_idx = np.argsort(x)
+                                x_sorted = x[sort_idx]
+                                y_sorted = y[sort_idx]
 
-                            fig.update_layout(
-                                title=f'Curva da Motobomba {selected_pump["modelo"]}',
-                                xaxis_title='Vazão (m³/h)',
-                                yaxis_title='Pressão (m.c.a)',
-                                template='plotly_white',
-                                height=400
-                            )
+                                # Cria interpolação polinomial de 3º grau
+                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
+                                poly = np.poly1d(coeffs)
 
-                            st.plotly_chart(fig, use_container_width=True)
+                                # Gera pontos suaves
+                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                                y_smooth = poly(x_smooth)
+
+                                # Cria figura
+                                fig = go.Figure()
+
+                                # Curva suave
+                                fig.add_trace(go.Scatter(
+                                    x=x_smooth,
+                                    y=y_smooth,
+                                    mode='lines',
+                                    name='Curva Interpolada',
+                                    line=dict(color='#1f77b4', width=3)
+                                ))
+
+                                # Pontos originais
+                                fig.add_trace(go.Scatter(
+                                    x=x_sorted,
+                                    y=y_sorted,
+                                    mode='markers',
+                                    name='Dados do Fabricante',
+                                    marker=dict(color='red', size=8)
+                                ))
+
+                                fig.update_layout(
+                                    title=f'Curva da Motobomba {selected_pump["modelo"]}',
+                                    xaxis_title='Vazão (m³/h)',
+                                    yaxis_title='Pressão (m.c.a)',
+                                    template='plotly_white',
+                                    height=500
+                                )
+
+                                st.plotly_chart(fig, use_container_width=True)
+
+                            except Exception as e:
+                                st.error(f"Erro ao gerar curva: {str(e)}")
+                            # --- FIM DO NOVO CÓDIGO ---
+
                         else:
                             st.warning("Dados insuficientes para plotar a curva")
                 else:
