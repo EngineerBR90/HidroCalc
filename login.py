@@ -13,8 +13,11 @@ def verify_password(input_password, stored_hashed_password):
     return bcrypt.checkpw(input_password.encode(), stored_hashed_password.encode())
 
 def login():
-    st.title("Login SisHydro")
+    st.title("Login HidroCalc Piscinas")
     st.write("Desenvolvido por Engº Reinaldo Farias")
+    st.write("Segundo critérios de dimensionamento da norma ABNT NBR 10.339:2018").
+
+
 
     username = st.text_input("Usuário", key="login_username").lower()
     password = st.text_input("Senha", type="password", key="login_password")
