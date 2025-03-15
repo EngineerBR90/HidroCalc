@@ -156,7 +156,7 @@ def run():
 
             with disp_col1:
                 # Opção Sodramar
-                st.image("assets/disp_hidro_sodramar.jpg", use_column_width=True)
+                st.image("assets/disp_hidro_sodramar.jpg", use_container_width=True)  # Corrigido aqui
                 sodramar = st.checkbox(
                     "SODRAMAR",
                     value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'SODRAMAR',
@@ -165,7 +165,7 @@ def run():
 
             with disp_col2:
                 # Opção Albacete
-                st.image("assets/disp_hidro_albacete.jpg", use_column_width=True)
+                st.image("assets/disp_hidro_albacete.jpg", use_container_width=True)  # Corrigido aqui
                 albacete = st.checkbox(
                     "ALBACETE",
                     value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'ALBACETE',
