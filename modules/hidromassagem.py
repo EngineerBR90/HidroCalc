@@ -143,57 +143,46 @@ def run():
     st.title("💧 Módulo de Hidromassagem")
     st.markdown("---")
 
-    # CSS para estilização
-    st.markdown("""
-        <style>
-            div[role=radiogroup] > label {
-                display: none;
-            }
-            [data-testid=column] {
-                text-align: center;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
+    # Container principal
     with st.container():
-        col_principal = st.columns(2)
+        col1, col2 = st.columns(2)
 
-        with col_principal[0]:
-            # 1. Seleção do dispositivo - Corrigido
-            st.write("Selecione o tipo de dispositivo:")
-            col_dispositivos = st.columns(2)
+        with col1:
+            # 1. Seleção do tipo de dispositivo
+            st.write("**Selecione o tipo de dispositivo:**")
 
-            with col_dispositivos[0]:
+            # Criar colunas internas para organização
+            disp_col1, disp_col2 = st.columns([1, 1])
+
+            with disp_col1:
                 # Opção Sodramar
-                st.image("assets/disp_hidro_sodramar.jpg", width=150)
-                st.markdown("<div style='text-align: center;'>SODRAMAR</div>", unsafe_allow_html=True)
-                selecionado_sodramar = st.radio(
-                    "Sodramar",
-                    options=["", "SODRAMAR"],
-                    index=1 if st.session_state.get('tipo_dispositivo') == "SODRAMAR" else 0,
-                    key="radio_sodramar",
-                    horizontal=True
+                st.image("assets/disp_hidro_sodramar.jpg", use_column_width=True)
+                sodramar = st.checkbox(
+                    "SODRAMAR",
+                    value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'SODRAMAR',
+                    key="sodramar_check"
                 )
 
-            with col_dispositivos[1]:
+            with disp_col2:
                 # Opção Albacete
-                st.image("assets/disp_hidro_albacete.jpg", width=150)
-                st.markdown("<div style='text-align: center;'>ALBACETE</div>", unsafe_allow_html=True)
-                selecionado_albacete = st.radio(
-                    "Albacete",
-                    options=["", "ALBACETE"],
-                    index=1 if st.session_state.get('tipo_dispositivo') == "ALBACETE" else 0,
-                    key="radio_albacete",
-                    horizontal=True
+                st.image("assets/disp_hidro_albacete.jpg", use_column_width=True)
+                albacete = st.checkbox(
+                    "ALBACETE",
+                    value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'ALBACETE',
+                    key="albacete_check"
                 )
 
-            # Atualização do estado - Corrigido
-            tipo_dispositivo = "SODRAMAR"  # Valor padrão
-            if selecionado_sodramar:
-                tipo_dispositivo = "SODRAMAR"
-            elif selecionado_albacete:
-                tipo_dispositivo = "ALBACETE"
-            st.session_state.tipo_dispositivo = tipo_dispositivo
+            # Lógica de seleção mútua
+            if sodramar and albacete:
+                st.session_state.tipo_dispositivo = 'SODRAMAR'
+                st.experimental_rerun()
+            elif sodramar:
+                st.session_state.tipo_dispositivo = 'SODRAMAR'
+            elif albacete:
+                st.session_state.tipo_dispositivo = 'ALBACETE'
+
+            # Espaçamento
+            st.write("")
 
             # 2. Quantidade de dispositivos
             quantidade = st.number_input(
@@ -204,7 +193,7 @@ def run():
                 step=1
             )
 
-        with col_principal[1]:
+        with col2:
             # 3. Seleção de pressão
             pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
