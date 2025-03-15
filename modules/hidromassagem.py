@@ -153,7 +153,7 @@ def run():
 
         with col1:
             # 1. Seleção do dispositivo - SODRAMAR
-            st.image("assets/disp_hidro_sodramar.jpg", use_container_width=True)
+            st.image("assets/disp_hidro_sodramar.png", use_container_width=True)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "SODRAMAR":
@@ -178,7 +178,7 @@ def run():
 
         with col2:
             # 1. Seleção do dispositivo - ALBACETE
-            st.image("assets/disp_hidro_albacete.jpg", use_container_width=True)
+            st.image("assets/disp_hidro_albacete.png", use_container_width=True)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "ALBACETE":
