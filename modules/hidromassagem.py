@@ -149,28 +149,37 @@ def run():
 
     # Container principal
     with st.container():
+        # Dispositivo Sodramar
+        with st.container():
+            cols = st.columns([3, 1])  # Proporção imagem/botão
+            with cols[0]:
+                st.image("assets/disp_hidro_sodramar.png", use_container_width=True)
+            with cols[1]:
+                if st.session_state.tipo_dispositivo == "SODRAMAR":
+                    btn = st.button("✔️ SELECIONADO", type="primary", use_container_width=True)
+                else:
+                    btn = st.button("Selecionar", type="secondary", use_container_width=True)
+                if btn:
+                    st.session_state.tipo_dispositivo = "SODRAMAR"
+                    st.rerun()
+
+        # Dispositivo Albacete
+        with st.container():
+            cols = st.columns([3, 1])  # Mesma proporção
+            with cols[0]:
+                st.image("assets/disp_hidro_albacete.png", use_container_width=True)
+            with cols[1]:
+                if st.session_state.tipo_dispositivo == "ALBACETE":
+                    btn = st.button("✔️ SELECIONADO", type="primary", use_container_width=True)
+                else:
+                    btn = st.button("Selecionar", type="secondary", use_container_width=True)
+                if btn:
+                    st.session_state.tipo_dispositivo = "ALBACETE"
+                    st.rerun()
+
+        # Inputs
         col1, col2 = st.columns(2)
-
-        # Coluna SODRAMAR
         with col1:
-            # Centralização da imagem
-            left, center = st.columns([1, 4])
-            with center:
-                st.image("assets/disp_hidro_sodramar.png", width=200)
-
-            # Botão de seleção
-            if st.session_state.tipo_dispositivo == "SODRAMAR":
-                btn_style = "primary"
-                btn_label = "✔️ SODRAMAR (SELECIONADO)"
-            else:
-                btn_style = "secondary"
-                btn_label = "Selecionar SODRAMAR"
-
-            if st.button(btn_label, key="btn_sod", type=btn_style, use_container_width=True):
-                st.session_state.tipo_dispositivo = "SODRAMAR"
-                st.rerun()
-
-            # Input quantidade
             quantidade = st.number_input(
                 "Quantidade de dispositivos:",
                 min_value=1,
@@ -178,27 +187,7 @@ def run():
                 value=1,
                 step=1
             )
-
-        # Coluna ALBACETE
         with col2:
-            # Centralização da imagem
-            left, center = st.columns([1, 4])
-            with center:
-                st.image("assets/disp_hidro_albacete.png", width=200)
-
-            # Botão de seleção
-            if st.session_state.tipo_dispositivo == "ALBACETE":
-                btn_style = "primary"
-                btn_label = "✔️ ALBACETE (SELECIONADO)"
-            else:
-                btn_style = "secondary"
-                btn_label = "Selecionar ALBACETE"
-
-            if st.button(btn_label, key="btn_alb", type=btn_style, use_container_width=True):
-                st.session_state.tipo_dispositivo = "ALBACETE"
-                st.rerun()
-
-            # Input pressão
             pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
                 min_value=4,
@@ -207,7 +196,6 @@ def run():
                 step=2,
                 format="%d"
             )
-
     # Cálculos
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
