@@ -74,7 +74,7 @@ def main():
     elif st.session_state.current_page == "Transbordo":
         transbordo.run()
     elif st.session_state.current_page == "Hidromassagem":
-        st.warning("Módulo em desenvolvimento! 🚧")
+        hidromassagem.run()
     elif st.session_state.current_page == "Cascatas":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
