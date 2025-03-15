@@ -250,7 +250,7 @@ def run():
                                     mode='lines',
                                     name='Curva Interpolada',
                                     line=dict(color='#1f77b4', width=3)
-                                )
+                                ))
 
                                 # Pontos originais
                                 fig.add_trace(go.Scatter(
