@@ -151,24 +151,26 @@ def run():
     with st.container():
         col1, col2 = st.columns(2)
 
+        # Coluna SODRAMAR
         with col1:
-             left, center = st.columns([1, 4])  # Proporção 1:4 para alinhamento
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
             with center:
                 st.image("assets/disp_hidro_sodramar.png", width=200)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "SODRAMAR":
-                btn_label_sod = "✔️ SODRAMAR (SELECIONADO)"
-                btn_type_sod = "primary"
+                btn_style = "primary"
+                btn_label = "✔️ SODRAMAR (SELECIONADO)"
             else:
-                btn_label_sod = "Selecionar SODRAMAR"
-                btn_type_sod = "secondary"
+                btn_style = "secondary"
+                btn_label = "Selecionar SODRAMAR"
 
-            if st.button(btn_label_sod, key="btn_sodramar", type=btn_type_sod, use_container_width=True):
+            if st.button(btn_label, key="btn_sod", type=btn_style, use_container_width=True):
                 st.session_state.tipo_dispositivo = "SODRAMAR"
                 st.rerun()
 
-            # 2. Quantidade de dispositivos
+            # Input quantidade
             quantidade = st.number_input(
                 "Quantidade de dispositivos:",
                 min_value=1,
@@ -177,25 +179,26 @@ def run():
                 step=1
             )
 
+        # Coluna ALBACETE
         with col2:
-            # Centraliza a imagem
-            left, center = st.columns([1, 4])  # Mesma proporção
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
             with center:
                 st.image("assets/disp_hidro_albacete.png", width=200)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "ALBACETE":
-                btn_label_alb = "✔️ ALBACETE (SELECIONADO)"
-                btn_type_alb = "primary"
+                btn_style = "primary"
+                btn_label = "✔️ ALBACETE (SELECIONADO)"
             else:
-                btn_label_alb = "Selecionar ALBACETE"
-                btn_type_alb = "secondary"
+                btn_style = "secondary"
+                btn_label = "Selecionar ALBACETE"
 
-            if st.button(btn_label_alb, key="btn_albacete", type=btn_type_alb, use_container_width=True):
+            if st.button(btn_label, key="btn_alb", type=btn_style, use_container_width=True):
                 st.session_state.tipo_dispositivo = "ALBACETE"
                 st.rerun()
 
-            # 3. Seleção de pressão
+            # Input pressão
             pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
                 min_value=4,
