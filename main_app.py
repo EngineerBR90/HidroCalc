@@ -15,7 +15,7 @@ if "authenticated" not in st.session_state or not st.session_state["authenticate
 
 def main():
     st.set_page_config(
-        page_title="HidroCalc Piscinas",
+        page_title="💧 HidroCalc Piscinas",
         layout="wide",
         initial_sidebar_state="expanded"
     )

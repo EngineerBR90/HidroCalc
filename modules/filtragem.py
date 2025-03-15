@@ -101,7 +101,7 @@ BANCO_FILTROS = [
 ]
 
 def run():
-    st.title("Módulo Filtragem")
+    st.title("💧 Módulo Filtragem")
     st.markdown("---")
     
     # Input do volume
