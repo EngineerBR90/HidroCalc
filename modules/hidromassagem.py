@@ -152,8 +152,9 @@ def run():
         col1, col2 = st.columns(2)
 
         with col1:
-            # 1. Seleção do dispositivo - SODRAMAR
-            st.image("assets/disp_hidro_sodramar.png", width=250)
+             left, center = st.columns([1, 4])  # Proporção 1:4 para alinhamento
+            with center:
+                st.image("assets/disp_hidro_sodramar.png", width=200)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "SODRAMAR":
@@ -177,8 +178,10 @@ def run():
             )
 
         with col2:
-            # 1. Seleção do dispositivo - ALBACETE
-            st.image("assets/disp_hidro_albacete.png", width=250)
+            # Centraliza a imagem
+            left, center = st.columns([1, 4])  # Mesma proporção
+            with center:
+                st.image("assets/disp_hidro_albacete.png", width=200)
 
             # Botão de seleção
             if st.session_state.tipo_dispositivo == "ALBACETE":
