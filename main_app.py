@@ -82,7 +82,7 @@ def main():
 
 
 def show_home():
-    st.title("HidroCalc Piscinas")
+    st.title("💧 HidroCalc Piscinas")
     st.markdown("""
     ### Ferramentas para dimensionamento de sistemas hidráulicos para piscinas
 
