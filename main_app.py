@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as npe
 import bcrypt
-from modules import filtragem, transbordo
+from modules import filtragem, transbordo, hidromassagem
 
 # Verifica se o usuário está autenticado
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:

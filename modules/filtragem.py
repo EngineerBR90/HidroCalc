@@ -84,7 +84,7 @@ BANCO_FILTROS = [
         "altura_mm": 1140,
         "peso_bruto_com_areia_kg": 335.74,
         "peso_bruto_sem_areia_kg": 35.74,
-        "modelo_motobomba": "BM-150 T"
+        "modelo_motobomba": "BMC-150 M"
     },
     {
         "modelo": "FM-100",
