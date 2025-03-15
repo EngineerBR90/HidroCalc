@@ -281,7 +281,8 @@ def run():
                     **Sugestões:**
                     - Verifique se a pressão selecionada está correta
                     - Considere dividir em dois ou mais sistemas com acionamentos independentes
-                    - Considere utilizar múltiplas MBs em paralelo. Para tal é imprescindível dimensionar linha de sucção e verificar velocidade de fluxo ≤1,80 m/s)
+                    - Considere utilizar múltiplas MBs em paralelo. Para tal é imprescindível dimensionar 
+                    linha de sucção e verificar velocidade de fluxo ≤1,80 m/s.
                     - Verifique modelos com maior capacidade
                     """)
 
