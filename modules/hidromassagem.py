@@ -143,17 +143,57 @@ def run():
     st.title("💧 Módulo de Hidromassagem")
     st.markdown("---")
 
-    # Container principal
-    with st.container():
-        col1, col2 = st.columns(2)
+    # CSS para estilização
+    st.markdown("""
+        <style>
+            div[role=radiogroup] > label {
+                display: none;
+            }
+            [data-testid=column] {
+                text-align: center;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-        with col1:
-            # 1. Seleção do tipo de dispositivo
-            tipo_dispositivo = st.radio(
-                "Selecione o tipo de dispositivo:",
-                options=["Sodramar", "Albacete"],
-                index=0
-            )
+    with st.container():
+        col_principal = st.columns(2)
+
+        with col_principal[0]:
+            # 1. Seleção do dispositivo - Corrigido
+            st.write("Selecione o tipo de dispositivo:")
+            col_dispositivos = st.columns(2)
+
+            with col_dispositivos[0]:
+                # Opção Sodramar
+                st.image("assets/disp_hidro_sodramar.jpg", width=150)
+                st.markdown("<div style='text-align: center;'>SODRAMAR</div>", unsafe_allow_html=True)
+                selecionado_sodramar = st.radio(
+                    "Sodramar",
+                    options=["", "SODRAMAR"],
+                    index=1 if st.session_state.get('tipo_dispositivo') == "SODRAMAR" else 0,
+                    key="radio_sodramar",
+                    horizontal=True
+                )
+
+            with col_dispositivos[1]:
+                # Opção Albacete
+                st.image("assets/disp_hidro_albacete.jpg", width=150)
+                st.markdown("<div style='text-align: center;'>ALBACETE</div>", unsafe_allow_html=True)
+                selecionado_albacete = st.radio(
+                    "Albacete",
+                    options=["", "ALBACETE"],
+                    index=1 if st.session_state.get('tipo_dispositivo') == "ALBACETE" else 0,
+                    key="radio_albacete",
+                    horizontal=True
+                )
+
+            # Atualização do estado - Corrigido
+            tipo_dispositivo = "SODRAMAR"  # Valor padrão
+            if selecionado_sodramar:
+                tipo_dispositivo = "SODRAMAR"
+            elif selecionado_albacete:
+                tipo_dispositivo = "ALBACETE"
+            st.session_state.tipo_dispositivo = tipo_dispositivo
 
             # 2. Quantidade de dispositivos
             quantidade = st.number_input(
@@ -164,7 +204,7 @@ def run():
                 step=1
             )
 
-        with col2:
+        with col_principal[1]:
             # 3. Seleção de pressão
             pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
@@ -178,8 +218,8 @@ def run():
     # Cálculos
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
-            # 4. Cálculo da vazão necessária
-            vazao_por_dispositivo = 4.5 if tipo_dispositivo == "Sodramar" else 4.0
+            # 4. Cálculo corrigido (SODRAMAR maiúsculo)
+            vazao_por_dispositivo = 4.5 if tipo_dispositivo == "SODRAMAR" else 4.0
             vazao_necessaria = quantidade * vazao_por_dispositivo
 
             # 5. Seleção da motobomba
