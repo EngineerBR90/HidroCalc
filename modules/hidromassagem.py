@@ -151,7 +151,7 @@ def run():
             # 1. Seleção do tipo de dispositivo
             tipo_dispositivo = st.radio(
                 "Selecione o tipo de dispositivo:",
-                options=["SODRAMAR", "ALBACETE"],
+                options=["Sodramar", "Albacete"],
                 index=0
             )
 
@@ -166,18 +166,20 @@ def run():
 
         with col2:
             # 3. Seleção de pressão
-            pressoes_disponiveis = list(range(4, 19, 2))  # De 4 a 18, passo 2
-            pressao_selecionada = st.selectbox(
+            pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
-                options=pressoes_disponiveis,
-                index=0
+                min_value=4,
+                max_value=18,
+                value=4,
+                step=2,
+                format="%d"
             )
 
     # Cálculos
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
             # 4. Cálculo da vazão necessária
-            vazao_por_dispositivo = 4.5 if tipo_dispositivo == "SODRAMAR" else 4.0
+            vazao_por_dispositivo = 4.5 if tipo_dispositivo == "Sodramar" else 4.0
             vazao_necessaria = quantidade * vazao_por_dispositivo
 
             # 5. Seleção da motobomba
