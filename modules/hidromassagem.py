@@ -143,46 +143,29 @@ def run():
     st.title("💧 Módulo de Hidromassagem")
     st.markdown("---")
 
+    # Inicialização do estado
+    if 'tipo_dispositivo' not in st.session_state:
+        st.session_state.tipo_dispositivo = "SODRAMAR"
+
     # Container principal
     with st.container():
         col1, col2 = st.columns(2)
 
         with col1:
-            # 1. Seleção do tipo de dispositivo
-            st.write("**Selecione o tipo de dispositivo:**")
+            # 1. Seleção do dispositivo - SODRAMAR
+            st.image("assets/disp_hidro_sodramar.jpg", use_container_width=True)
 
-            # Criar colunas internas para organização
-            disp_col1, disp_col2 = st.columns([1, 1])
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "SODRAMAR":
+                btn_label_sod = "✔️ SODRAMAR (SELECIONADO)"
+                btn_type_sod = "primary"
+            else:
+                btn_label_sod = "Selecionar SODRAMAR"
+                btn_type_sod = "secondary"
 
-            with disp_col1:
-                # Opção Sodramar
-                st.image("assets/disp_hidro_sodramar.jpg", use_container_width=True)  # Corrigido aqui
-                sodramar = st.checkbox(
-                    "SODRAMAR",
-                    value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'SODRAMAR',
-                    key="sodramar_check"
-                )
-
-            with disp_col2:
-                # Opção Albacete
-                st.image("assets/disp_hidro_albacete.jpg", use_container_width=True)  # Corrigido aqui
-                albacete = st.checkbox(
-                    "ALBACETE",
-                    value=st.session_state.get('tipo_dispositivo', 'SODRAMAR') == 'ALBACETE',
-                    key="albacete_check"
-                )
-
-            # Lógica de seleção mútua
-            if sodramar and albacete:
-                st.session_state.tipo_dispositivo = 'SODRAMAR'
-                st.experimental_rerun()
-            elif sodramar:
-                st.session_state.tipo_dispositivo = 'SODRAMAR'
-            elif albacete:
-                st.session_state.tipo_dispositivo = 'ALBACETE'
-
-            # Espaçamento
-            st.write("")
+            if st.button(btn_label_sod, key="btn_sodramar", type=btn_type_sod, use_container_width=True):
+                st.session_state.tipo_dispositivo = "SODRAMAR"
+                st.rerun()
 
             # 2. Quantidade de dispositivos
             quantidade = st.number_input(
@@ -194,6 +177,21 @@ def run():
             )
 
         with col2:
+            # 1. Seleção do dispositivo - ALBACETE
+            st.image("assets/disp_hidro_albacete.jpg", use_container_width=True)
+
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "ALBACETE":
+                btn_label_alb = "✔️ ALBACETE (SELECIONADO)"
+                btn_type_alb = "primary"
+            else:
+                btn_label_alb = "Selecionar ALBACETE"
+                btn_type_alb = "secondary"
+
+            if st.button(btn_label_alb, key="btn_albacete", type=btn_type_alb, use_container_width=True):
+                st.session_state.tipo_dispositivo = "ALBACETE"
+                st.rerun()
+
             # 3. Seleção de pressão
             pressao_selecionada = st.number_input(
                 "Pressão de dimensionamento (m.c.a):",
@@ -208,7 +206,7 @@ def run():
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
             # 4. Cálculo corrigido (SODRAMAR maiúsculo)
-            vazao_por_dispositivo = 4.5 if tipo_dispositivo == "SODRAMAR" else 4.0
+            vazao_por_dispositivo = 4.5 if st.session_state.tipo_dispositivo == "SODRAMAR" else 3.3
             vazao_necessaria = quantidade * vazao_por_dispositivo
 
             # 5. Seleção da motobomba
