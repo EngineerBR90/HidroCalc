@@ -181,7 +181,7 @@ def calcular_perda_carga(comprimento, diametro, vazao_m3h):
 
 
 def run():
-    st.title("💧 Módulo de Hidromassagem")
+    st.title("Módulo de Hidromassagem")
     st.markdown("---")
 
     # Inicialização do estado
