@@ -138,7 +138,10 @@ def main():
     st.title("💧 Cálculo de Perda de Carga")
     st.markdown("""
     ### Métodos Utilizados
-    - **Regime Laminar:** Fator de atrito calculado por \( f = \frac{64}{Re} \) (Hagen-Poiseuille).  
+    - **Regime Laminar:** Fator de atrito calculado por:  
+    """)
+    st.latex(r"f = \frac{64}{Re}")
+    st.markdown("""
     - **Regime Turbulento:** Solução iterativa da equação de Colebrook-White (Newton-Raphson).  
     - **Perdas Localizadas:** Método dos comprimentos equivalentes, com base em tabelas normativas.  
     - **Perda Total:** Soma das perdas distribuídas e localizadas, com margem de 5%.  
