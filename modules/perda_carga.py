@@ -55,9 +55,36 @@ def calcular_fator_atrito(Re, D_int):
     if Re < 2000:
         return 64 / Re if Re > 0 else 0
 
-    # Usando aproximação de Swamee-Jain para evitar iteração
-    rr = 0.0000015 / (D_int / 1000)  # Rugosidade relativa para PVC
-    return 0.25 / (math.log10(rr / 3.7 + 5.74 / Re ** 0.9)) ** 2
+    # Parâmetros para PVC
+    epsilon = 0.0000015  # Rugosidade absoluta em metros
+    D = D_int  # Diâmetro interno em metros
+
+    # Constantes da equação
+    a = epsilon / (3.7 * D)
+    b = 2.51 / Re
+
+    # Chute inicial (f=0.02 -> x=1/sqrt(0.02) ≈ 7.071)
+    x = 7.071
+    tol = 1e-8
+    max_iter = 100
+
+    for i in range(max_iter):
+        termo = a + b * x
+        if termo <= 1e-12:  # Prevenção contra log(0)
+            break
+
+        # Função de Colebrook e sua derivada
+        f_x = x + 2 * math.log10(termo)
+        df_x = 1 + (2 * b) / (termo * math.log(10) * (x ** 2))
+
+        # Atualização Newton-Raphson
+        x_novo = x - (f_x / df_x)
+
+        if abs(x_novo - x) < tol:
+            break
+        x = x_novo
+
+    return 1.0 / (x ** 2)
 
 
 def calcular_linha(Q_m3h, diam_ext, L_real, conexoes):
