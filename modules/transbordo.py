@@ -180,7 +180,7 @@ def run():
     if st.button("Calcular", type="primary"):
         with st.spinner("Calculando..."):
             # Realiza cálculos
-            volume_cocho_litros = area_piscina_m2 * (altura_lamina_mm / 1000) * 1000
+            volume_cocho_litros = area_piscina_m2 * (altura_lamina_mm / 1000) * 3 * 1000
             area_lamina_m2 = (altura_lamina_mm / 1000) * comprimento_borda_m
             vazao_necessaria = (1608 * (altura_lamina_mm / 1000) * comprimento_borda_m) * math.sqrt(2 * 9.81 * (altura_lamina_mm / 1000))
             
