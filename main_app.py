@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as npe
 import bcrypt
-from modules import filtragem, transbordo, hidromassagem
+from modules import filtragem, transbordo, hidromassagem, perda_carga
 
 # Verifica se o usuário está autenticado
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
@@ -75,6 +75,8 @@ def main():
         transbordo.run()
     elif st.session_state.current_page == "Hidromassagem":
         hidromassagem.run()
+    elif st.session_state.current_page == "Perda de carga":
+        perda_carga.run()
     elif st.session_state.current_page == "Cascatas":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
@@ -89,14 +91,15 @@ def show_home():
     **Recursos Disponíveis:**
     - Sistema de filtragem com seleção automática de conjunto Filtro+MB
     - Cálculo de vazão necessária para sistemas de transbordo (borda infinita)
+    - Dimensionamento de motobombas para sistema de Hidromassagem
     - Banco de dados técnicos sobre equipamentos (Sodramar database)
+    - Determinação da perda de carga com base na fórmula de Darcy com interações pelo método Newton-Raphson para Colebrook-White
 
     **Módulos em desenvolvimento:**
-    - Hidromassagem
     - Cascatas 
     - Aquecimento por trocador de calor elétrico (engenharia reversa da PLANILHA DE DIMENSIONAMENTO SODRAMAR)
     - Verificação de velocidade de fluxo em linhas de sucção conforme NBR 10.339:2018 (módulo pronto, falta adaptar UI)
-    - Verificação de suscetibilidade à cavitação
+    - Verificação de suscetibilidade à cavitação (desenvolvimento impossibilitado por falta de info NPSHr do fornecedor Sodramar)
     """)
 
     # st.image("assets/logo_fx2.png", use_container_width=True)
