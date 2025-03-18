@@ -161,25 +161,25 @@ def main():
                               delta="ALERTA!" if alerta_rec else "OK")
                     st.metric("Perda Total", f"{rec['hf_total']:.2f} mca")
 
-                    # ===== NOVO BLOCO ADICIONADO =====
-                    st.markdown("---")
-                    st.subheader("🔥 Resultado Total da Instalação")
+                # ===== NOVO BLOCO ADICIONADO =====
+                st.markdown("---")
+                st.subheader("🔥 Resultado Total da Instalação")
 
-                    total_perda = suc['hf_total'] + rec['hf_total']
-                    cols_total = st.columns([1, 2])
-                    with cols_total[0]:
-                        st.metric(
+                total_perda = suc['hf_total'] + rec['hf_total']
+                cols_total = st.columns([1, 2])
+                with cols_total[0]:
+                    st.metric(
                             label="**Perda de Carga Total**",
                             value=f"{total_perda:.2f} mca",
                             help="Soma das perdas de sucção e recalque"
                         )
-                    with cols_total[1]:
+                with cols_total[1]:
                         st.write("**Composição:**")
                         st.info(f"""
-                                                    - Sucção: {suc['hf_total']:.2f} mca  
-                                                    - Recalque: {rec['hf_total']:.2f} mca  
-                                                    *Inclui perdas distribuídas, localizadas e margem de 5%*
-                                                    """)
+                                                                        - Sucção: {suc['hf_total']:.2f} mca  
+                                                                        - Recalque: {rec['hf_total']:.2f} mca  
+                                                                        *Inclui perdas distribuídas, localizadas e margem de 5%*
+                                                                        """)
 
                 # Detalhes técnicos
                 with st.expander("Detalhes Técnicos"):
