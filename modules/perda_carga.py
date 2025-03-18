@@ -176,15 +176,21 @@ def main():
                 with cols[0]:
                     st.subheader("Sucção")
                     st.metric("Diâmetro Interno", f"{suc['D_int']:.1f} mm")
-                    st.metric("Velocidade", f"{suc['V']:.2f} m/s",
-                              delta="ALERTA!" if alerta_suc else "OK")
+
+                    # Define delta negativo para exibir vermelho no alerta
+                    delta_suc = "-1" if alerta_suc else "+1"
+                    st.metric("Velocidade", f"{suc['V']:.2f} m/s", delta=delta_suc)
+
                     st.metric("Perda Total", f"{suc['hf_total']:.2f} mca")
 
                 with cols[1]:
                     st.subheader("Recalque")
                     st.metric("Diâmetro Interno", f"{rec['D_int']:.1f} mm")
-                    st.metric("Velocidade", f"{rec['V']:.2f} m/s",
-                              delta="ALERTA!" if alerta_rec else "OK")
+
+                    # Define delta negativo para exibir vermelho no alerta
+                    delta_rec = "-1" if alerta_rec else "+1"
+                    st.metric("Velocidade", f"{rec['V']:.2f} m/s", delta=delta_rec)
+
                     st.metric("Perda Total", f"{rec['hf_total']:.2f} mca")
 
                 # ===== NOVO BLOCO ADICIONADO =====
