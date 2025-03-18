@@ -161,21 +161,6 @@ def main():
                               delta="ALERTA!" if alerta_rec else "OK")
                     st.metric("Perda Total", f"{rec['hf_total']:.2f} mca")
 
-                # Detalhes técnicos
-                with st.expander("Detalhes Técnicos"):
-                    st.write("**Sucção:**")
-                    st.json({
-                        "Reynolds": f"{suc['Re']:.0f}",
-                        "Fator Atrito": f"{suc['f']:.6f}",
-                        "Comp. Equivalente": f"{suc['L_eq']:.2f} m"
-                    })
-                    st.write("**Recalque:**")
-                    st.json({
-                        "Reynolds": f"{rec['Re']:.0f}",
-                        "Fator Atrito": f"{rec['f']:.6f}",
-                        "Comp. Equivalente": f"{rec['L_eq']:.2f} m"
-                    })
-
                     # ===== NOVO BLOCO ADICIONADO =====
                     st.markdown("---")
                     st.subheader("🔥 Resultado Total da Instalação")
@@ -191,10 +176,27 @@ def main():
                     with cols_total[1]:
                         st.write("**Composição:**")
                         st.info(f"""
-                                    - Sucção: {suc['hf_total']:.2f} mca  
-                                    - Recalque: {rec['hf_total']:.2f} mca  
-                                    *Inclui perdas distribuídas, localizadas e margem de 5%*
-                                    """)
+                                                    - Sucção: {suc['hf_total']:.2f} mca  
+                                                    - Recalque: {rec['hf_total']:.2f} mca  
+                                                    *Inclui perdas distribuídas, localizadas e margem de 5%*
+                                                    """)
+
+                # Detalhes técnicos
+                with st.expander("Detalhes Técnicos"):
+                    st.write("**Sucção:**")
+                    st.json({
+                        "Reynolds": f"{suc['Re']:.0f}",
+                        "Fator Atrito": f"{suc['f']:.6f}",
+                        "Comp. Equivalente": f"{suc['L_eq']:.2f} m"
+                    })
+                    st.write("**Recalque:**")
+                    st.json({
+                        "Reynolds": f"{rec['Re']:.0f}",
+                        "Fator Atrito": f"{rec['f']:.6f}",
+                        "Comp. Equivalente": f"{rec['L_eq']:.2f} m"
+                    })
+
+
 
                 # Alertas normativos
                 if alerta_suc or alerta_rec:
