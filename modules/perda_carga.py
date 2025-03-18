@@ -231,6 +231,7 @@ def main():
                     **Limites de velocidade fluxo excedidos (NBR 10.339:2018):**
                     - Sucção: Máx 1.8 m/s
                     - Recalque: Máx 3.0 m/s
+                    
                     Ajuste os diâmetros da linha ou motobomba para de menor vazão!
                     """)
 
