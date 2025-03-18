@@ -25,7 +25,7 @@ def main():
         # Título e navegação no topo da sidebar
         st.title("Navegação")
         page = st.radio("Selecione o módulo:",
-                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento"])
+                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga"])
 
         # Espaço para empurrar o conteúdo para o final
         st.write("")  # Quebra de linha
