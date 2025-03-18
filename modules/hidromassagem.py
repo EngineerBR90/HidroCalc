@@ -203,7 +203,7 @@ def run():
                 "Pressão de dimensionamento (m.c.a):",
                 min_value=4,
                 max_value=18,
-                value=4,
+                value=8,
                 step=2,
                 format="%d"
             )
