@@ -76,7 +76,7 @@ def main():
     elif st.session_state.current_page == "Hidromassagem":
         hidromassagem.run()
     elif st.session_state.current_page == "Perda de carga":
-        perda_carga.run()
+        perda_carga.main()
     elif st.session_state.current_page == "Cascatas":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
