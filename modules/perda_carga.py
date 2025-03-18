@@ -133,6 +133,7 @@ def main():
     - **Regime Turbulento:** Solução iterativa da equação de Colebrook-White (iterações por Newton-Raphson).  
     - **Perdas Localizadas:** Método dos comprimentos equivalentes, com base em tabelas normativas.  
     - **Perda Total:** Soma das perdas distribuídas e localizadas, com margem de 5%.  
+    - **Altura geométrica:** Considerada desprezível, uma vez que o sistema succiona e recalca para um mesmo tanque
     - **Velocidades Máximas:** Critérios da NBR 10.339 (1,8 m/s sucção, 3,0 m/s recalque).  
     """)
 
