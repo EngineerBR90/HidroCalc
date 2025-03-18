@@ -202,10 +202,10 @@ def main():
                 with cols_total[1]:
                         st.write("**Composição:**")
                         st.info(f"""
-                                                                        - Sucção: {suc['hf_total']:.2f} mca  
-                                                                        - Recalque: {rec['hf_total']:.2f} mca  
-                                                                        *Inclui perdas distribuídas, localizadas e margem de 5%*
-                                                                        """)
+                                  - Sucção: {suc['hf_total']:.2f} mca  
+                                  - Recalque: {rec['hf_total']:.2f} mca  
+                                  *Inclui perdas distribuídas, localizadas e margem de 5%*
+                                  """)
 
                 # Detalhes técnicos
                 with st.expander("Detalhes Técnicos"):
