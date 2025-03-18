@@ -203,7 +203,8 @@ def main():
                         st.write("**Composição:**")
                         st.info(f"""
                                   - Sucção: {suc['hf_total']:.2f} mca  
-                                  - Recalque: {rec['hf_total']:.2f} mca  
+                                  - Recalque: {rec['hf_total']:.2f} mca
+                                  - Altura geométrica: Considerada desprezível, uma vez que o sistema succiona e recalca para um mesmo tanque  
                                   *Inclui perdas distribuídas, localizadas e margem de 5%*
                                   """)
 
@@ -227,10 +228,10 @@ def main():
                 # Alertas normativos
                 if alerta_suc or alerta_rec:
                     st.error("""
-                    **Limites de Velocidade (NBR 10.339):**
+                    **Limites de velocidade fluxo excedidos (NBR 10.339:2018):**
                     - Sucção: Máx 1.8 m/s
                     - Recalque: Máx 3.0 m/s
-                    Ajuste os diâmetros ou vazão!
+                    Ajuste os diâmetros da linha ou motobomba para de menor vazão!
                     """)
 
             except Exception as e:
