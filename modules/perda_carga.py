@@ -4,7 +4,6 @@ import streamlit as st
 
 # Dicionário para conversão de diâmetro externo para interno (valores em mm)
 DIAMETROS = {
-    20: 17.0,
     25: 21.6,
     32: 27.8,
     40: 35.2,
