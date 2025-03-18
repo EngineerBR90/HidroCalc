@@ -2,284 +2,152 @@
 import math
 import streamlit as st
 
-# Dicionário para conversão de diâmetro externo para interno (valores em mm)
-DIAMETROS = {
-    20: 17.0,
-    25: 21.6,
-    32: 27.8,
-    40: 35.2,
-    50: 44.0,
-    60: 53.4,
-    75: 66.6,
-    85: 75.6,
-    110: 97.8
-}
-
-# Estrutura de dados para comprimento equivalente das conexões para PVC.
-# Cada conexão possui um dicionário que relaciona o diâmetro externo à
-# um valor de comprimento equivalente (em metros).
-CONEXOES_EQUIV = {
-    "joelho 90º": {
-        25: 1.2,
-        32: 1.5,
-        40: 2.0,
-        50: 3.2,
-        60: 3.4,
-        75: 3.7,
-        85: 3.9,
-        110: 4.3
+# Estrutura de dados para comprimentos equivalentes (em metros por unidade)
+COMPRIMENTOS_EQUIVALENTES = {
+    "PVC": {
+        "joelho_90": {
+            20: 0.8, 25: 1.0, 32: 1.4, 40: 1.7, 50: 2.1,
+            60: 2.7, 75: 3.4, 85: 4.0, 110: 5.2
+        },
+        "joelho_45": {
+            20: 0.4, 25: 0.5, 32: 0.7, 40: 0.8, 50: 1.0,
+            60: 1.3, 75: 1.6, 85: 1.9, 110: 2.4
+        },
+        "valvula_esfera": {
+            20: 1.2, 25: 1.5, 32: 2.0, 40: 2.4, 50: 3.0,
+            60: 3.8, 75: 4.7, 85: 5.5, 110: 7.1
+        },
+        "tee_passagem_direta": {
+            20: 0.6, 25: 0.8, 32: 1.0, 40: 1.2, 50: 1.5,
+            60: 1.9, 75: 2.4, 85: 2.8, 110: 3.6
+        },
+        "tee_saida_lateral": {
+            20: 2.5, 25: 3.1, 32: 4.2, 40: 5.0, 50: 6.3,
+            60: 7.9, 75: 9.8, 85: 11.5, 110: 14.8
+        },
+        "curva_90": {
+            20: 0.7, 25: 0.9, 32: 1.2, 40: 1.4, 50: 1.8,
+            60: 2.3, 75: 2.9, 85: 3.4, 110: 4.4
+        },
+        "curva_45": {
+            20: 0.3, 25: 0.4, 32: 0.5, 40: 0.6, 50: 0.8,
+            60: 1.0, 75: 1.3, 85: 1.5, 110: 1.9
+        }
     },
-    "joelho 45º": {
-        25: 0.8,
-        32: 1.0,
-        40: 1.3,
-        50: 2.0,
-        60: 2.2,
-        75: 2.5,
-        85: 2.7,
-        110: 3.0
-    },
-    "união": {
-        25: 0.5,
-        32: 0.6,
-        40: 0.8,
-        50: 1.0,
-        60: 1.2,
-        75: 1.4,
-        85: 1.5,
-        110: 1.8
-    },
-    "Tê de passagem direta": {
-        25: 1.0,
-        32: 1.2,
-        40: 1.5,
-        50: 2.0,
-        60: 2.3,
-        75: 2.5,
-        85: 2.8,
-        110: 3.2
-    },
-    "Tê de saída lateral": {
-        25: 1.1,
-        32: 1.3,
-        40: 1.6,
-        50: 2.1,
-        60: 2.4,
-        75: 2.7,
-        85: 2.9,
-        110: 3.3
-    },
-    "registro esfera aberto": {
-        25: 0.3,
-        32: 0.4,
-        40: 0.5,
-        50: 0.7,
-        60: 0.8,
-        75: 1.0,
-        85: 1.1,
-        110: 1.3
-    },
-    "curva 90º": {
-        25: 1.2,
-        32: 1.5,
-        40: 2.0,
-        50: 3.2,
-        60: 3.4,
-        75: 3.7,
-        85: 3.9,
-        110: 4.3
-    },
-    "curva 45º": {
-        25: 0.8,
-        32: 1.0,
-        40: 1.3,
-        50: 2.0,
-        60: 2.2,
-        75: 2.5,
-        85: 2.7,
-        110: 3.0
+    "Aço": {
+        # Adicione valores equivalentes para aço conforme necessário
     }
 }
 
+DIAMETROS_PVC = {
+    20: 17.0, 25: 21.6, 32: 27.8, 40: 35.2,
+    50: 44.0, 60: 53.4, 75: 66.6, 85: 75.6, 110: 97.8
+}
 
-def calcular_perda_carga_streamlit():
-    st.title("Cálculo de Perda de Carga")
+
+def interface_conexoes(tipo_linha, material, diametro_ext):
+    with st.expander(f"Conexões - Linha de {tipo_linha}"):
+        cols = st.columns(2)
+        conexoes = {}
+
+        # Obter diâmetro interno correspondente
+        diametro_int = DIAMETROS_PVC[diametro_ext] if material == "PVC" else diametro_ext
+
+        for i, (conexao, valores) in enumerate(COMPRIMENTOS_EQUIVALENTES[material].items()):
+            with cols[i % 2]:
+                label = conexao.replace("_", " ").title()
+                qtd = st.number_input(
+                    f"{label} ({valores[diametro_ext]:.1f}m/un):",
+                    min_value=0,
+                    value=0,
+                    step=1,
+                    key=f"{tipo_linha}_{conexao}"
+                )
+                conexoes[conexao] = {
+                    'quantidade': qtd,
+                    'comprimento_unitario': valores[diametro_ext],
+                    'comprimento_total': qtd * valores[diametro_ext]
+                }
+        return conexoes
+
+
+def calcular_comprimento_equivalente(conexoes):
+    return sum([v['comprimento_total'] for v in conexoes.values()])
+
+
+def main():
+    st.title("📉 Cálculo Completo de Perda de Carga")
     st.markdown("---")
 
-    # Seção para seleção de material (única opção: PVC)
-    material = st.selectbox("Selecione o Material da Tubulação:", options=["PVC"])
-
-    # Formulário de entrada de dados
-    with st.form(key='form_perda_carga'):
+    with st.form(key='main_form'):
+        # Seção de parâmetros básicos
         col1, col2 = st.columns(2)
         with col1:
-            Q_m3h = st.number_input(
-                "Vazão (m³/h):",
-                min_value=0.1,
-                value=10.0,
-                step=0.1,
-                format="%.2f"
-            )
-            L = st.number_input(
-                "Comprimento da tubulação (m):",
-                min_value=0.1,
-                value=50.0,
-                step=1.0,
-                format="%.1f"
-            )
+            vazao = st.number_input("Vazão (m³/h):", min_value=0.1, value=10.0, step=0.1)
+            material_suc = st.selectbox("Material da Sucção:", ["PVC"], index=0)
+            diam_ext_suc = st.selectbox("Diâmetro Externo Sucção (mm):", list(DIAMETROS_PVC.keys()))
+
         with col2:
-            diam_ext = st.selectbox(
-                "Selecione o diâmetro EXTERNO da tubulação (mm):",
-                options=list(DIAMETROS.keys()),
-                index=3  # Exemplo: 40 mm
-            )
+            comprimento_real_suc = st.number_input("Comprimento Real Sucção (m):", min_value=0.0, value=10.0)
+            material_rec = st.selectbox("Material do Recalque:", ["PVC"], index=0)
+            diam_ext_rec = st.selectbox("Diâmetro Externo Recalque (mm):", list(DIAMETROS_PVC.keys()))
 
-        st.markdown("#### Conexões – Linha de Sucção")
-        conexoes_suc = {}
-        with st.expander("Conexões para Sucção", expanded=True):
-            for conexao in CONEXOES_EQUIV:
-                conexoes_suc[conexao] = st.number_input(
-                    f"Quantidade de {conexao}",
-                    min_value=0,
-                    value=0,
-                    step=1,
-                    key=f"suc_{conexao}"
-                )
+        # Conexões
+        conexoes_suc = interface_conexoes("Sucção", material_suc, diam_ext_suc)
+        conexoes_rec = interface_conexoes("Recalque", material_rec, diam_ext_rec)
 
-        st.markdown("#### Conexões – Linha de Recalque")
-        conexoes_rec = {}
-        with st.expander("Conexões para Recalque", expanded=True):
-            for conexao in CONEXOES_EQUIV:
-                conexoes_rec[conexao] = st.number_input(
-                    f"Quantidade de {conexao}",
-                    min_value=0,
-                    value=0,
-                    step=1,
-                    key=f"rec_{conexao}"
-                )
+        if st.form_submit_button("Calcular", type="primary"):
+            try:
+                # Cálculos preliminares
+                diam_int_suc = DIAMETROS_PVC[diam_ext_suc]
+                diam_int_rec = DIAMETROS_PVC[diam_ext_rec]
 
-        calcular = st.form_submit_button("Calcular Perda de Carga", type="primary")
+                # Comprimentos equivalentes
+                L_eq_suc = calcular_comprimento_equivalente(conexoes_suc)
+                L_eq_rec = calcular_comprimento_equivalente(conexoes_rec)
 
-    if calcular:
-        try:
-            # Constantes (baseado em 20°C)
-            VISCOSIDADE_AGUA = 1.004e-6  # m²/s
-            RUGOSIDADE_PVC = 0.0000015  # m
-            g = 9.81  # m/s²
+                # Comprimentos totais
+                L_total_suc = comprimento_real_suc + L_eq_suc
+                L_total_rec = comprimento_real_suc + L_eq_rec
 
-            # Conversões e ajustes
-            Q = Q_m3h / 3600  # m³/s
-            # Diâmetro interno em metros (convertido a partir do diâmetro externo)
-            D_int = DIAMETROS[diam_ext] / 1000
+                # Velocidades
+                V_suc = (vazao / 3600) / (math.pi * (diam_int_suc / 1000) ** 2 / 4)
+                V_rec = (vazao / 3600) / (math.pi * (diam_int_rec / 1000) ** 2 / 4)
 
-            # Cálculo da área e velocidade do fluxo
-            A = math.pi * (D_int ** 2) / 4
-            V = Q / A if A > 0 else 0
+                # Alertas de velocidade
+                alerta_suc = V_suc > 1.8
+                alerta_rec = V_rec > 3.0
 
-            # Número de Reynolds
-            Re = V * D_int / VISCOSIDADE_AGUA if D_int > 0 else 0
+                # Exibição dos resultados
+                st.success("**Resultados do Cálculo**")
+                cols = st.columns(2)
+                with cols[0]:
+                    st.metric("Velocidade Sucção", f"{V_suc:.2f} m/s",
+                              delta="ALERTA!" if alerta_suc else "OK")
+                    st.metric("Compr. Equivalente Sucção", f"{L_eq_suc:.1f} m")
 
-            # Cálculo do fator de atrito
-            if Re < 2000:
-                f = 64 / Re if Re > 0 else 0
-                regime = "Laminar"
-            else:
-                x1 = 4.0
-                tol = 1e-6
-                max_iter = 100
-                convergiu = False
-                for i in range(max_iter):
-                    termo1 = RUGOSIDADE_PVC / (3.7 * D_int)
-                    termo2 = 2.51 / (Re * math.sqrt(x1))
-                    f_calc = 0.25 / (math.log10(termo1 + termo2)) ** 2
-                    if abs(f_calc - x1) < tol:
-                        f = f_calc
-                        convergiu = True
-                        break
-                    x1 = f_calc
-                regime = "Turbulento" if convergiu else "Não convergiu"
-                if not convergiu:
-                    st.warning("Cálculo do fator de atrito não convergiu após 100 iterações!")
+                with cols[1]:
+                    st.metric("Velocidade Recalque", f"{V_rec:.2f} m/s",
+                              delta="ALERTA!" if alerta_rec else "OK")
+                    st.metric("Compr. Equivalente Recalque", f"{L_eq_rec:.1f} m")
 
-            # Cálculo da perda de carga distribuída (hf)
-            hf = f * (L / D_int) * (V ** 2 / (2 * g)) if D_int > 0 else 0
+                # Detalhes técnicos
+                with st.expander("Detalhes Completos"):
+                    st.write("**Sucção:**")
+                    st.json(conexoes_suc)
+                    st.write("**Recalque:**")
+                    st.json(conexoes_rec)
 
-            # Cálculo do comprimento equivalente adicional para cada linha, somando as conexões.
-            # Para cada conexão, obtemos o comprimento equivalente com base no diâmetro externo selecionado.
-            le_total_suc = 0
-            for conexao, quant in conexoes_suc.items():
-                # Se o diâmetro não estiver definido para a conexão, considera 0
-                le = CONEXOES_EQUIV.get(conexao, {}).get(diam_ext, 0)
-                le_total_suc += quant * le
+                if alerta_suc or alerta_rec:
+                    st.error("""
+                    **Atenção aos limites de velocidade!**
+                    - Sucção: Máx 1.8 m/s (NBR 10.339)
+                    - Recalque: Máx 3.0 m/s (NBR 10.339)
+                    """)
 
-            le_total_rec = 0
-            for conexao, quant in conexoes_rec.items():
-                le = CONEXOES_EQUIV.get(conexao, {}).get(diam_ext, 0)
-                le_total_rec += quant * le
-
-            # Comprimento efetivo para cada linha: tubulação distribuída + conexões
-            L_eff_suc = L + le_total_suc
-            L_eff_rec = L + le_total_rec
-
-            # Cálculo da perda de carga total para cada linha
-            hf_total_suc = f * (L_eff_suc / D_int) * (V ** 2 / (2 * g)) * 1.05
-            hf_total_rec = f * (L_eff_rec / D_int) * (V ** 2 / (2 * g)) * 1.05
-
-            # Perda unitária (% por 100m) considerando apenas a perda distribuída
-            perda_percentual_100m = (hf / L) * 100 if L != 0 else 0
-
-            # Verificações de velocidade conforme NBR 10.339:2018:
-            # Sucção: alerta se > 1,8 m/s; Recalque: alerta se > 3,0 m/s
-            alerta_suc = V > 1.8
-            alerta_rec = V > 3.0
-
-            # Exibição dos resultados
-            st.success("**Resultados do Cálculo**")
-            cols1 = st.columns(2)
-            with cols1[0]:
-                st.metric("Velocidade do Fluido (m/s)", f"{V:.4f}")
-                st.metric("Número de Reynolds", f"{Re:.0f}")
-                st.metric("Regime de Escoamento", regime)
-            with cols1[1]:
-                st.metric("Fator de Atrito (f)", f"{f:.6f}")
-                st.metric("Perda Distribuída", f"{hf:.4f} mca")
-                st.metric("Perda Unitária", f"{perda_percentual_100m:.2f}% por 100m")
-
-            st.markdown("### Comprimentos Equivalentes e Perdas Totais")
-            cols2 = st.columns(2)
-            with cols2[0]:
-                st.metric("Comprimento Equiv. Adicional (Sucção)", f"{le_total_suc:.2f} m")
-                st.metric("Perda Total Sucção (c/ 5% margem)", f"{hf_total_suc:.4f} mca")
-            with cols2[1]:
-                st.metric("Comprimento Equiv. Adicional (Recalque)", f"{le_total_rec:.2f} m")
-                st.metric("Perda Total Recalque (c/ 5% margem)", f"{hf_total_rec:.4f} mca")
-
-            st.markdown("### Velocidades e Alertas")
-            st.write(f"**Velocidade de Sucção:** {V:.4f} m/s")
-            st.write(f"**Velocidade de Recalque:** {V:.4f} m/s")
-            if alerta_suc:
-                st.error("Atenção: A velocidade na linha de sucção ultrapassa 1,8 m/s!")
-            if alerta_rec:
-                st.error("Atenção: A velocidade na linha de recalque ultrapassa 3,0 m/s!")
-
-            with st.expander("Detalhes Técnicos"):
-                st.write("**Parâmetros Utilizados:**")
-                st.write(f"- Material: {material}")
-                st.write(f"- Viscosidade da água (20°C): {VISCOSIDADE_AGUA:.3e} m²/s")
-                st.write(f"- Rugosidade do PVC: {RUGOSIDADE_PVC} m")
-                st.write(f"- Diâmetro Interno: {D_int * 1000:.1f} mm (convertido do externo de {diam_ext} mm)")
-                st.write(f"- Comprimento de tubulação (distribuída): {L:.2f} m")
-                st.write(f"- Comprimento Equiv. Sucção: {le_total_suc:.2f} m")
-                st.write(f"- Comprimento Equiv. Recalque: {le_total_rec:.2f} m")
-
-        except Exception as e:
-            st.error(f"Erro nos cálculos: {str(e)}")
-            st.stop()
-
-
-def run():
-    calcular_perda_carga_streamlit()
+            except Exception as e:
+                st.error(f"Erro nos cálculos: {str(e)}")
 
 
 if __name__ == "__main__":
-    run()
+    main()
