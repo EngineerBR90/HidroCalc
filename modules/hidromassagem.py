@@ -194,22 +194,81 @@ def run():
 
         # Coluna SODRAMAR
         with col1:
-        # Interface de seleção mantida igual...
-        # ... (código existente)
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
+            with center:
+                st.image("assets/disp_hidro_sodramar.png", width=200)
+
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "SODRAMAR":
+                btn_style = "primary"
+                btn_label = "✔️ SODRAMAR (SELECIONADO)"
+            else:
+                btn_style = "secondary"
+                btn_label = "Selecionar SODRAMAR"
+
+            if st.button(btn_label, key="btn_sod", type=btn_style, use_container_width=True):
+                st.session_state.tipo_dispositivo = "SODRAMAR"
+                st.rerun()
+
+            # Input quantidade
+            quantidade = st.number_input(
+                "Quantidade de dispositivos:",
+                min_value=1,
+                max_value=99,
+                value=1,
+                step=1
+            )
 
         # Coluna ALBACETE
         with col2:
-    # Interface de seleção mantida igual...
-    # ... (código existente)
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
+            with center:
+                st.image("assets/disp_hidro_albacete.png", width=200)
 
-    # Cálculos principais
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "ALBACETE":
+                btn_style = "primary"
+                btn_label = "✔️ ALBACETE (SELECIONADO)"
+            else:
+                btn_style = "secondary"
+                btn_label = "Selecionar ALBACETE"
+
+            if st.button(btn_label, key="btn_alb", type=btn_style, use_container_width=True):
+                st.session_state.tipo_dispositivo = "ALBACETE"
+                st.rerun()
+
+            # Input pressão
+            pressao_selecionada = st.number_input(
+                "Pressão de dimensionamento (m.c.a):",
+                min_value=4,
+                max_value=18,
+                value=4,
+                step=2,
+                format="%d"
+            )
+
+    # Cálculos
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
-            # Cálculos iniciais mantidos...
-            # ... (código existente até a seleção da bomba)
+            # 4. Cálculo corrigido (SODRAMAR maiúsculo)
+            vazao_por_dispositivo = 4.5 if st.session_state.tipo_dispositivo == "SODRAMAR" else 3.3
+            vazao_necessaria = quantidade * vazao_por_dispositivo
+
+            # 5. Seleção da motobomba
+            bomba_selecionada = None
+            for bomba in sorted(BANCO_BOMBAS, key=lambda x: x['potencia_cv']):
+                chave_vazao = f'vazao_{pressao_selecionada}_mca'
+                vazao_bomba = bomba.get(chave_vazao)
+
+                if vazao_bomba and vazao_bomba >= vazao_necessaria:
+                    bomba_selecionada = bomba
+                    break
 
             # Exibição dos resultados
             st.success("**Resultados do Dimensionamento**")
+
             cols = st.columns(2)
             with cols[0]:
                 st.metric("Vazão Total Necessária", f"{vazao_necessaria:.1f} m³/h")
@@ -285,14 +344,102 @@ def run():
                                 st.success("Sistema dimensionado corretamente!")
 
                     # Seção original de detalhes da bomba mantida...
-                    # ... (código existente do expander da bomba)
+                    with st.expander("🔍 Detalhes da Motobomba"):
+                        st.write(f"**Especificações Técnicas:**")
+                        st.write(f"- Modelo: {bomba_selecionada['modelo']}")
+                        st.write(f"- Potência: {bomba_selecionada['potencia_cv']} CV")
+                        st.write(
+                            f"- Vazão em {pressao_selecionada} m.c.a: {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
 
+                        st.write("**Curva da Motobomba:**")
+                        # Preparar dados para o gráfico
+                        pressoes = []
+                        vazoes = []
+                        possible_pressures = list(range(2, 19, 2))  # De 2 a 18 mca
+                        for press in possible_pressures:
+                            key = f'vazao_{press}_mca'
+                            if bomba_selecionada.get(key) is not None:
+                                pressoes.append(press)
+                                vazoes.append(bomba_selecionada[key])
+
+                        # Criar gráfico com Plotly
+                        if pressoes and vazoes:
+                            try:
+                                # Converte para arrays numpy e ordena
+                                x = np.array(vazoes)
+                                y = np.array(pressoes)
+                                sort_idx = np.argsort(x)
+                                x_sorted = x[sort_idx]
+                                y_sorted = y[sort_idx]
+
+                                # Cria interpolação polinomial de 3º grau
+                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
+                                poly = np.poly1d(coeffs)
+
+                                # Gera pontos suaves
+                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                                y_smooth = poly(x_smooth)
+
+                                # Cria figura
+                                fig = go.Figure()
+
+                                # Curva suave
+                                fig.add_trace(go.Scatter(
+                                    x=x_smooth,
+                                    y=y_smooth,
+                                    mode='lines',
+                                    name='Curva Interpolada',
+                                    line=dict(color='#1f77b4', width=3)
+                                ))
+
+                                # Pontos originais
+                                fig.add_trace(go.Scatter(
+                                    x=x_sorted,
+                                    y=y_sorted,
+                                    mode='markers',
+                                    name='Dados do Fabricante',
+                                    marker=dict(color='red', size=8)
+                                ))
+
+                                fig.update_layout(
+                                    title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
+                                    xaxis_title='Vazão (m³/h)',
+                                    yaxis_title='Pressão (m.c.a)',
+                                    template='plotly_white',
+                                    height=500
+                                )
+
+                                st.plotly_chart(fig, use_container_width=True)
+
+                            except Exception as e:
+                                st.error(f"Erro ao gerar curva: {str(e)}")
+                        else:
+                            st.warning("Dados insuficientes para plotar a curva")
                 else:
-            # Mensagem de erro mantida...
-            # ... (código existente)
+                    st.error("Nenhuma motobomba adequada encontrada!")
+                    st.warning("""
+                    **Sugestões:**
+                    - Verifique se a pressão selecionada está correta
+                    - Considere dividir em dois ou mais sistemas com acionamentos independentes
+                    - Considere utilizar múltiplas MBs em paralelo. Para tal é imprescindível dimensionar 
+                    linha de sucção e verificar velocidade de fluxo ≤1,80 m/s.
+                    - Verifique modelos com maior capacidade
+                    """)
 
-    # Integração com Projeto Completo mantida...
-    # ... (código existente)
+            st.markdown("---")
+
+    # Integração com Projeto Completo
+    if "projeto" in st.session_state and st.button("Salvar no Projeto Completo"):
+        equipamento = {
+            "sistema": "Hidromassagem",
+            "tipo": st.session_state.tipo_dispositivo,
+            "quantidade": quantidade,
+            "vazao": vazao_necessaria,
+            "pressao": pressao_selecionada,
+            "bomba": bomba_selecionada['modelo'] if bomba_selecionada else None
+        }
+        st.session_state.projeto["equipamentos"]["Hidromassagem"] = equipamento
+        st.success("Configuração salva no projeto!")
 
 
 if __name__ == "__main__":
