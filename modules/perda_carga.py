@@ -103,7 +103,7 @@ CONEXOES_EQUIV = {
 
 
 def calcular_perda_carga_streamlit():
-    st.title("📉 Cálculo de Perda de Carga")
+    st.title("Cálculo de Perda de Carga")
     st.markdown("---")
 
     # Seção para seleção de material (única opção: PVC)
