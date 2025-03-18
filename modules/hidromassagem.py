@@ -1,14 +1,11 @@
-# modules/hidromassagem.py
 import streamlit as st
 import math
 import plotly.graph_objects as go
 import numpy as np
 
-# Constantes hidráulicas
-VISCOSIDADE_CINEMATICA_AGUA = 1.004e-6  # m²/s (20°C)
-RUGOSIDADE_PVC = 0.0015  # mm (rugosidade absoluta)
-GRAVIDADE = 9.81  # m/s²
-
+# =====================================================================
+# Banco de Bombas (omitido para poupar processamento)
+# =====================================================================
 BANCO_BOMBAS = [
     {
         "modelo": "BMC-25",
@@ -142,43 +139,137 @@ BANCO_BOMBAS = [
     }
 ]
 
+# =====================================================================
+# Cálculo de Perda de Carga e Funções Hidráulicas
+# =====================================================================
 
-def calcular_fator_atrito(re, diametro_mm):
-    """Calcula o fator de atrito usando o método de Swamee-Jain"""
-    diametro_m = diametro_mm / 1000
-    rugosidade_relativa = RUGOSIDADE_PVC / diametro_m
+# Constantes atualizadas para cálculos hidráulicos
+VISCOSIDADE_CINEMATICA_AGUA = 1.004e-6  # m²/s (20°C)
+RUGOSIDADE_PVC = 0.0000015  # m (rugosidade absoluta)
+GRAVIDADE = 9.81  # m/s²
 
+
+def calcular_fator_atrito(re, diametro_m):
+    """Calcula o fator de atrito usando o método iterativo (Newton-Raphson) para a equação de Colebrook-White."""
     if re < 2000:
         return 64 / re if re > 0 else 0.02
 
-    return 0.25 / (math.log10(rugosidade_relativa / 3.7 + 5.74 / re ** 0.9)) ** 2
+    rr = RUGOSIDADE_PVC / diametro_m
+    x = 1.0  # Valor inicial
+    tol = 1e-6
+    max_iter = 100
+
+    for _ in range(max_iter):
+        f = 0.25 / (math.log10(rr / 3.7 + 2.51 / (re * math.sqrt(x))) ** 2)
+        if abs(f - x) < tol:
+            return f
+        x = f
+    return f
 
 
-def calcular_perda_carga(comprimento, diametro, vazao_m3h):
-    """Calcula a perda de carga total com margem de segurança"""
+def calcular_perda_carga_detalhada(Q_m3h, L, D_mm):
+    """Calcula parâmetros hidráulicos detalhados relacionados à perda de carga na tubulação."""
     try:
         # Conversão de unidades
-        diametro_m = diametro / 1000
-        vazao_m3s = vazao_m3h / 3600
-        area = math.pi * (diametro_m ** 2) / 4
-        velocidade = vazao_m3s / area
+        Q = Q_m3h / 3600  # m³/s
+        D = D_mm / 1000  # m
 
-        # Cálculo do número de Reynolds
-        re = velocidade * diametro_m / VISCOSIDADE_CINEMATICA_AGUA
+        # Cálculos básicos
+        A = math.pi * (D ** 2) / 4
+        V = Q / A if A > 0 else 0
+        Re = V * D / VISCOSIDADE_CINEMATICA_AGUA if D > 0 else 0
 
         # Fator de atrito
-        f = calcular_fator_atrito(re, diametro)
+        f = calcular_fator_atrito(Re, D)
 
-        # Perda de carga distribuída
-        hf = f * (comprimento / diametro_m) * (velocidade ** 2) / (2 * GRAVIDADE)
+        # Perda de carga principal (hf)
+        hf = f * (L / D) * (V ** 2 / (2 * GRAVIDADE)) if D > 0 else 0
 
-        # Margem de segurança de 15% para perdas localizadas
-        return hf * 1.15
+        # Cálculos adicionais
+        perda_percentual = (hf / L * 100) if L > 0 else 0
+        hf_com_margem = hf * 1.05  # Margem de 5%
+
+        return {
+            'velocidade': V,
+            'reynolds': Re,
+            'fator_atrito': f,
+            'perda_carga': hf,
+            'perda_percentual': perda_percentual,
+            'perda_com_margem': hf_com_margem
+        }
 
     except Exception as e:
-        st.error(f"Erro no cálculo: {str(e)}")
-        return 0
+        st.error(f"Erro nos cálculos de perda de carga: {str(e)}")
+        return None
 
+
+def exibir_interface_verificacao(vazao_necessaria):
+    """Exibe a interface de verificação hidráulica detalhada para o cálculo da perda de carga."""
+    with st.expander("🔍 Verificação Hidráulica Detalhada", expanded=True):
+        st.markdown("### Parâmetros da Tubulação")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            diametro = st.selectbox(
+                "Diâmetro interno (mm):",
+                options=[25, 32, 40, 50, 60, 75, 85, 110],
+                index=2
+            )
+            comprimento = st.number_input(
+                "Comprimento total (m):",
+                min_value=1.0,
+                value=10.0,
+                step=0.5
+            )
+
+        with col2:
+            altura_estatica = st.number_input(
+                "Altura estática (m):",
+                min_value=0.0,
+                value=2.0,
+                step=0.1
+            )
+            # O parâmetro 'temperatura_agua' pode ser utilizado para ajustes futuros nos cálculos
+            temperatura_agua = st.number_input(
+                "Temperatura da água (°C):",
+                min_value=0.0,
+                max_value=40.0,
+                value=20.0,
+                step=0.5
+            )
+
+        if st.button("Calcular Perda de Carga", type="secondary"):
+            resultados = calcular_perda_carga_detalhada(
+                Q_m3h=vazao_necessaria,
+                L=comprimento,
+                D_mm=diametro
+            )
+
+            if resultados:
+                st.markdown("### Resultados Detalhados")
+                cols = st.columns(2)
+                with cols[0]:
+                    st.metric("Velocidade do fluxo", f"{resultados['velocidade']:.2f} m/s")
+                    st.metric("Número de Reynolds", f"{resultados['reynolds']:.0f}")
+                    st.metric("Fator de atrito", f"{resultados['fator_atrito']:.6f}")
+
+                with cols[1]:
+                    st.metric("Perda de carga total", f"{resultados['perda_carga']:.2f} mca")
+                    st.metric("Perda por 100m", f"{resultados['perda_percentual']:.2f}%")
+                    st.metric("Perda com margem 5%", f"{resultados['perda_com_margem']:.2f} mca")
+
+                pressao_total = altura_estatica + resultados['perda_com_margem']
+                st.markdown(f"**Pressão total requerida:** `{pressao_total:.2f} mca`")
+
+                if pressao_total > st.session_state.pressao_selecionada:
+                    st.error("Atenção: Pressão requerida excede a capacidade da bomba!")
+                else:
+                    st.success("Sistema dentro das especificações!")
+
+
+# =====================================================================
+# Módulo de Hidromassagem
+# =====================================================================
 
 def run():
     st.title("💧 Módulo de Hidromassagem")
@@ -194,22 +285,84 @@ def run():
 
         # Coluna SODRAMAR
         with col1:
-        # Interface de seleção mantida igual...
-        # ... (código existente)
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
+            with center:
+                st.image("assets/disp_hidro_sodramar.png", width=200)
+
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "SODRAMAR":
+                btn_style = "primary"
+                btn_label = "✔️ SODRAMAR (SELECIONADO)"
+            else:
+                btn_style = "secondary"
+                btn_label = "Selecionar SODRAMAR"
+
+            if st.button(btn_label, key="btn_sod", type=btn_style, use_container_width=True):
+                st.session_state.tipo_dispositivo = "SODRAMAR"
+                st.rerun()
+
+            # Input quantidade
+            quantidade = st.number_input(
+                "Quantidade de dispositivos:",
+                min_value=1,
+                max_value=99,
+                value=1,
+                step=1
+            )
 
         # Coluna ALBACETE
         with col2:
-    # Interface de seleção mantida igual...
-    # ... (código existente)
+            # Centralização da imagem
+            left, center = st.columns([1, 4])
+            with center:
+                st.image("assets/disp_hidro_albacete.png", width=200)
 
-    # Cálculos principais
+            # Botão de seleção
+            if st.session_state.tipo_dispositivo == "ALBACETE":
+                btn_style = "primary"
+                btn_label = "✔️ ALBACETE (SELECIONADO)"
+            else:
+                btn_style = "secondary"
+                btn_label = "Selecionar ALBACETE"
+
+            if st.button(btn_label, key="btn_alb", type=btn_style, use_container_width=True):
+                st.session_state.tipo_dispositivo = "ALBACETE"
+                st.rerun()
+
+            # Input pressão
+            pressao_selecionada = st.number_input(
+                "Pressão de dimensionamento (m.c.a):",
+                min_value=4,
+                max_value=18,
+                value=4,
+                step=2,
+                format="%d"
+            )
+
+    # Armazena a pressão selecionada no session_state para uso na verificação hidráulica
+    st.session_state.pressao_selecionada = pressao_selecionada
+
+    # Cálculos
     if st.button("Calcular", type="primary"):
         with st.spinner("Processando..."):
-            # Cálculos iniciais mantidos...
-            # ... (código existente até a seleção da bomba)
+            # 4. Cálculo corrigido (SODRAMAR maiúsculo)
+            vazao_por_dispositivo = 4.5 if st.session_state.tipo_dispositivo == "SODRAMAR" else 3.3
+            vazao_necessaria = quantidade * vazao_por_dispositivo
+
+            # 5. Seleção da motobomba
+            bomba_selecionada = None
+            for bomba in sorted(BANCO_BOMBAS, key=lambda x: x['potencia_cv']):
+                chave_vazao = f'vazao_{pressao_selecionada}_mca'
+                vazao_bomba = bomba.get(chave_vazao)
+
+                if vazao_bomba and vazao_bomba >= vazao_necessaria:
+                    bomba_selecionada = bomba
+                    break
 
             # Exibição dos resultados
             st.success("**Resultados do Dimensionamento**")
+
             cols = st.columns(2)
             with cols[0]:
                 st.metric("Vazão Total Necessária", f"{vazao_necessaria:.1f} m³/h")
@@ -221,78 +374,99 @@ def run():
                     st.metric("Modelo", bomba_selecionada['modelo'])
                     st.metric("Potência", f"{bomba_selecionada['potencia_cv']} CV")
 
-                    # Nova seção de verificação hidráulica
-                    with st.expander("🔍 Verificação Hidráulica Detalhada", expanded=False):
-                        st.markdown("### Parâmetros da Tubulação")
+                    with st.expander("🔍 Detalhes da Motobomba"):
+                        st.write(f"**Especificações Técnicas:**")
+                        st.write(f"- Modelo: {bomba_selecionada['modelo']}")
+                        st.write(f"- Potência: {bomba_selecionada['potencia_cv']} CV")
+                        st.write(
+                            f"- Vazão em {pressao_selecionada} m.c.a: {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
 
-                        col3, col4 = st.columns(2)
-                        with col3:
-                            diametro = st.selectbox(
-                                "Diâmetro interno (mm):",
-                                options=[25, 32, 40, 50, 60, 75, 85, 110],
-                                index=2
-                            )
-                            comprimento = st.number_input(
-                                "Comprimento total (m):",
-                                min_value=1.0,
-                                value=10.0,
-                                step=0.5
-                            )
+                        st.write("**Curva da Motobomba:**")
+                        # Preparar dados para o gráfico
+                        pressoes = []
+                        vazoes = []
+                        possible_pressures = list(range(2, 19, 2))  # De 2 a 18 mca
+                        for press in possible_pressures:
+                            key = f'vazao_{press}_mca'
+                            if bomba_selecionada.get(key) is not None:
+                                pressoes.append(press)
+                                vazoes.append(bomba_selecionada[key])
 
-                        with col4:
-                            altura_estatica = st.number_input(
-                                "Altura estática (m):",
-                                min_value=0.0,
-                                value=2.0,
-                                step=0.1
-                            )
-                            temp_agua = st.number_input(
-                                "Temperatura da água (°C):",
-                                min_value=0.0,
-                                max_value=40.0,
-                                value=20.0,
-                                step=0.5
-                            )
+                        # Criar gráfico com Plotly
+                        if pressoes and vazoes:
+                            try:
+                                x = np.array(vazoes)
+                                y = np.array(pressoes)
+                                sort_idx = np.argsort(x)
+                                x_sorted = x[sort_idx]
+                                y_sorted = y[sort_idx]
 
-                        if st.button("Calcular Perdas", key="btn_perdas"):
-                            resultados = {
-                                'perda_carga': calcular_perda_carga(comprimento, diametro, vazao_necessaria),
-                                'altura_estatica': altura_estatica
-                            }
+                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
+                                poly = np.poly1d(coeffs)
 
-                            st.markdown("### Resultados da Verificação")
-                            cols_res = st.columns(2)
-                            with cols_res[0]:
-                                st.metric("Perda de carga calculada", f"{resultados['perda_carga']:.2f} mca")
-                                st.metric("Altura estática", f"{resultados['altura_estatica']:.2f} m")
+                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                                y_smooth = poly(x_smooth)
 
-                            with cols_res[1]:
-                                pressao_total = resultados['perda_carga'] + resultados['altura_estatica']
-                                st.metric("Pressão total requerida", f"{pressao_total:.2f} mca")
-                                st.metric("Margem de segurança",
-                                          f"{(pressao_selecionada - pressao_total):.2f} mca",
-                                          delta_color="inverse" if pressao_total > pressao_selecionada else "normal")
+                                fig = go.Figure()
 
-                            if pressao_total > pressao_selecionada:
-                                st.error("Atenção: Pressão requerida excede a capacidade da bomba!")
-                                st.markdown("""
-                                **Ações recomendadas:**
-                                - Aumente o diâmetro da tubulação
-                                - Reduza o comprimento da tubulação
-                                - Considere uma bomba mais potente
-                                """)
-                            else:
-                                st.success("Sistema dimensionado corretamente!")
+                                fig.add_trace(go.Scatter(
+                                    x=x_smooth,
+                                    y=y_smooth,
+                                    mode='lines',
+                                    name='Curva Interpolada',
+                                    line=dict(color='#1f77b4', width=3)
+                                ))
 
-                    # Seção original de detalhes da bomba mantida...
-                    # ... (código existente do expander da bomba)
+                                fig.add_trace(go.Scatter(
+                                    x=x_sorted,
+                                    y=y_sorted,
+                                    mode='markers',
+                                    name='Dados do Fabricante',
+                                    marker=dict(color='red', size=8)
+                                ))
 
+                                fig.update_layout(
+                                    title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
+                                    xaxis_title='Vazão (m³/h)',
+                                    yaxis_title='Pressão (m.c.a)',
+                                    template='plotly_white',
+                                    height=500
+                                )
+
+                                st.plotly_chart(fig, use_container_width=True)
+
+                            except Exception as e:
+                                st.error(f"Erro ao gerar curva: {str(e)}")
+                        else:
+                            st.warning("Dados insuficientes para plotar a curva")
                 else:
-            # Mensagem de erro mantida...
-            # ... (código existente)
+                    st.error("Nenhuma motobomba adequada encontrada!")
+                    st.warning("""
+                    **Sugestões:**
+                    - Verifique se a pressão selecionada está correta
+                    - Considere dividir em dois ou mais sistemas com acionamentos independentes
+                    - Considere utilizar múltiplas MBs em paralelo. Para tal é imprescindível dimensionar 
+                      linha de sucção e verificar velocidade de fluxo ≤1,80 m/s.
+                    - Verifique modelos com maior capacidade
+                    """)
 
-    # Integração com Projeto Completo mantida...
-    # ... (código existente)
+            st.markdown("---")
+
+            # Integração da verificação hidráulica de perda de carga
+            exibir_interface_verificacao(vazao_necessaria)
+
+    # Integração com Projeto Completo
+    if "projeto" in st.session_state and st.button("Salvar no Projeto Completo"):
+        equipamento = {
+            "sistema": "Hidromassagem",
+            "tipo": st.session_state.tipo_dispositivo,
+            "quantidade": quantidade,
+            "vazao": vazao_necessaria if 'vazao_necessaria' in locals() else None,
+            "pressao": pressao_selecionada,
+            "bomba": bomba_selecionada['modelo'] if bomba_selecionada else None
+        }
+        st.session_state.projeto["equipamentos"]["Hidromassagem"] = equipamento
+        st.success("Configuração salva no projeto!")
 
 
 if __name__ == "__main__":
