@@ -13,7 +13,10 @@ USERS = {
     "projetos": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
     "juliana": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
     "guilherme": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
-}
+    "fernando": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
+    "felipy": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
+    "adriano": "$2b$12$043BG9wRR2tcwhZhfkNHLOnrG19JiyCKBAbAwYWBNKwbEtjMTSBG2",
+    }
 
 def verify_password(input_password, stored_hashed_password):
     """Verifica se a senha inserida corresponde ao hash armazenado."""
