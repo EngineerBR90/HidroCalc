@@ -150,7 +150,7 @@ def run():
             # Inputs do usuário
             altura_lamina_mm = st.number_input(
                 "Altura da lâmina (mm)",
-                min_value=0.5,
+                min_value=1.0,
                 step=0.5,
                 format="%.1f"
 
