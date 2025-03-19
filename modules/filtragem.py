@@ -107,8 +107,8 @@ def run():
     # Input do volume
     volume = st.number_input(
         "Digite o volume total da piscina (m³)",
-        min_value=20.0,
-        step=0.5,
+        min_value=1.0,
+        step=1.0,
         format="%.1f"
     )
     

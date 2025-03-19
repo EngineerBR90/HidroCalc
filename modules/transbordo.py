@@ -150,20 +150,20 @@ def run():
             # Inputs do usuário
             altura_lamina_mm = st.number_input(
                 "Altura da lâmina (mm)",
-                min_value=3.0,
+                min_value=0.5,
                 step=0.5,
                 format="%.1f"
             )
             comprimento_borda_m = st.number_input(
                 "Comprimento total da borda infinita (m)",
-                min_value=5.0,
-                step=0.5,
+                min_value=1.0,
+                step=1.0,
                 format="%.1f"
             )
             area_piscina_m2 = st.number_input(
                 "Área da piscina (m²)",
-                min_value=30.0,
-                step=0.5,
+                min_value=1.0,
+                step=1.0,
                 format="%.1f"
             )
             
