@@ -161,9 +161,9 @@ def run():
             
             st.markdown("---")
     
-    if st.button("Voltar ao Menu Principal"):
-        st.session_state.current_page = "Menu Principal"
-        st.rerun()
+    #if st.button("Voltar ao Menu Principal"):
+    #    st.session_state.current_page = "Menu Principal"
+    #   st.rerun()
 
 # Para testar individualmente
 if __name__ == "__main__":
