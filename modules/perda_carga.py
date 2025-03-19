@@ -148,7 +148,7 @@ def main():
         col_suc1, col_suc2 = st.columns(2)
         with col_suc1:
             diam_ext_suc = st.selectbox("Diâmetro Externo (mm):", DIAMETROS.keys(), key='suc')
-            L_real_suc = st.number_input("Comprimento Real (m):", 0.1, 1000.0, 10.0, 0.1, key='L_suc')
+            L_real_suc = st.number_input("Comprimento Real (m):", 0.1, 1000.0, 6.0, 6.0, key='L_suc')
         conexoes_suc = interface_conexoes("Sucção")
 
         # Configuração Recalque
@@ -156,7 +156,7 @@ def main():
         col_rec1, col_rec2 = st.columns(2)
         with col_rec1:
             diam_ext_rec = st.selectbox("Diâmetro Externo (mm):", DIAMETROS.keys(), key='rec')
-            L_real_rec = st.number_input("Comprimento Real (m):", 0.1, 1000.0, 50.0, 0.1, key='L_rec')
+            L_real_rec = st.number_input("Comprimento Real (m):", 0.1, 1000.0, 12.0, 6.0, key='L_rec')
         conexoes_rec = interface_conexoes("Recalque")
 
         if st.form_submit_button("Calcular", type="primary"):
