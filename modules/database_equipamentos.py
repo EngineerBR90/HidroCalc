@@ -345,7 +345,7 @@ def run():
                     mode='lines',
                     name='Curva Linear',
                     line=dict(color='blue', width=2)
-                )
+                ))
 
                 # Pontos originais
                 fig.add_trace(go.Scatter(
@@ -354,7 +354,7 @@ def run():
                     mode='markers',
                     name='Dados Originais',
                     marker=dict(color='red', size=8)
-                )
+                ))
 
                 fig.update_layout(
                     title=f'Curva de Desempenho - {modelo_selecionado}',
