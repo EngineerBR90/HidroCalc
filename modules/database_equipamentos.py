@@ -307,8 +307,18 @@ def run():
 
         with cols[1]:
             df_filtrado = df_bombas[df_bombas["Modelo"] == modelo_selecionado]
+
+            # Ordenar colunas de pressão numericamente
+            colunas_pressao = df_filtrado.columns[2:]  # Ignorar as duas primeiras colunas (Modelo e Potência)
+
+            # Extrair valores numéricos das colunas e ordenar
+            colunas_ordenadas = sorted(colunas_pressao, key=lambda x: float(x.split()[0]))
+
+            # Reordenar o dataframe
+            df_ordenado = df_filtrado[['Modelo', 'Potência (cv)'] + colunas_ordenadas]
+
             st.dataframe(
-                df_filtrado,
+                df_ordenado,
                 hide_index=True,
                 use_container_width=True,
                 column_config={
@@ -317,7 +327,7 @@ def run():
             )
 
             # Processamento dos dados para o gráfico
-            # Processamento dos dados para o gráfico
+
             pontos = []
             for coluna in df_filtrado.columns[2:]:
                 if pd.notna(df_filtrado[coluna].iloc[0]):
