@@ -93,7 +93,7 @@ def calcular_linha(Q_m3h, diam_ext, L_real, conexoes):
     f = calcular_fator_atrito(Re, D_int)
 
     # Adicione a nova função no módulo (em qualquer lugar antes da main(), sugiro após a calcular_fator_atrito)
-    def perda_carga_hazen_williams(Q_m3h: float, diam_ext: float, L_real: float) -> float:
+def perda_carga_hazen_williams(Q_m3h: float, diam_ext: float, L_real: float) -> float:
         """
         Calcula a perda de carga (hf) utilizando a equação de Hazen-Williams.
         """
