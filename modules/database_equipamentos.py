@@ -317,6 +317,7 @@ def run():
             )
 
             # Processamento dos dados para o gráfico
+            # Processamento dos dados para o gráfico
             pontos = []
             for coluna in df_filtrado.columns[2:]:
                 if pd.notna(df_filtrado[coluna].iloc[0]):
@@ -325,49 +326,35 @@ def run():
                     pontos.append((vazao, pressao))
 
             if len(pontos) >= 2:
+                # Ordenar por vazão para interpolação
                 pontos_ordenados = sorted(pontos, key=lambda x: x[0])
                 vazoes = [p[0] for p in pontos_ordenados]
                 pressoes = [p[1] for p in pontos_ordenados]
 
-                # Configuração da interpolação
-                usar_scipy = True
-                try:
-                    from scipy.interpolate import interp1d
-                except ImportError:
-                    usar_scipy = False
-                    st.warning("Interpolação avançada desativada (SciPy não instalado). Usando método linear.")
-
-                try:
-                    if usar_scipy:
-                        f = interp1d(vazoes, pressoes, kind='cubic', fill_value='extrapolate')
-                        vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
-                        pressoes_interp = f(vazoes_interp)
-                    else:
-                        raise ValueError("Forçando fallback para linear")
-                except Exception as e:
-                    vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
-                    pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
+                # Interpolação linear simples com NumPy
+                vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
+                pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
 
                 # Criar gráfico com Plotly
                 fig = go.Figure()
 
-                # Curva interpolada (CORREÇÃO AQUI)
+                # Curva linear
                 fig.add_trace(go.Scatter(
                     x=vazoes_interp,
                     y=pressoes_interp,
                     mode='lines',
-                    name='Curva Interpolada' if usar_scipy else 'Curva Linear',
+                    name='Curva Linear',
                     line=dict(color='blue', width=2)
-                ))  # Parêntese adicional
+                )
 
-                # Pontos originais (CORREÇÃO AQUI)
+                # Pontos originais
                 fig.add_trace(go.Scatter(
                     x=vazoes,
                     y=pressoes,
                     mode='markers',
                     name='Dados Originais',
                     marker=dict(color='red', size=8)
-                )) # Parêntese adicional
+                )
 
                 fig.update_layout(
                     title=f'Curva de Desempenho - {modelo_selecionado}',
