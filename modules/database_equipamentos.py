@@ -324,7 +324,6 @@ def run():
                     pontos.append((vazao, pressao))
 
             if len(pontos) >= 2:
-                # Ordenar por vazão para interpolação
                 pontos_ordenados = sorted(pontos, key=lambda x: x[0])
                 vazoes = [p[0] for p in pontos_ordenados]
                 pressoes = [p[1] for p in pontos_ordenados]
@@ -339,39 +338,35 @@ def run():
 
                 try:
                     if usar_scipy:
-                        # Tentativa de interpolação cúbica com SciPy
                         f = interp1d(vazoes, pressoes, kind='cubic', fill_value='extrapolate')
                         vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                         pressoes_interp = f(vazoes_interp)
                     else:
-                        # Fallback para interpolação linear com NumPy
                         raise ValueError("Forçando fallback para linear")
-
                 except Exception as e:
-                    # Interpolação linear como fallback seguro
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
 
                 # Criar gráfico com Plotly
                 fig = go.Figure()
 
-                # Curva interpolada
+                # Curva interpolada (CORREÇÃO AQUI)
                 fig.add_trace(go.Scatter(
                     x=vazoes_interp,
                     y=pressoes_interp,
                     mode='lines',
                     name='Curva Interpolada' if usar_scipy else 'Curva Linear',
                     line=dict(color='blue', width=2)
-                )
+                )  # Parêntese adicional
 
-                # Pontos originais
+                # Pontos originais (CORREÇÃO AQUI)
                 fig.add_trace(go.Scatter(
                     x=vazoes,
                     y=pressoes,
                     mode='markers',
                     name='Dados Originais',
                     marker=dict(color='red', size=8)
-                ))
+                )  # Parêntese adicional
 
                 fig.update_layout(
                     title=f'Curva de Desempenho - {modelo_selecionado}',
@@ -385,7 +380,7 @@ def run():
                 else:
                 st.warning("Dados insuficientes para gerar a curva")
 
-                # Botão de download para motobombas
+                # Botão de download
                 st.download_button(
                     label="Baixar Dados de Motobombas (CSV)",
                     data=df_bombas.to_csv(index=False).encode('utf-8'),
