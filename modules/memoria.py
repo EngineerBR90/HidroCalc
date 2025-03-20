@@ -1,9 +1,12 @@
 # modules/memoria.py
 import streamlit as st
+
+st.set_page_config(page_title="Memória Cálculo", layout="wide")
+
 import pandas as pd
 
 def run():
-    st.set_page_config(page_title="Memória Cálculo", layout="wide")
+
 
     # Seção 1: Dados Técnicos
     with st.expander("🔧 Dados Técnicos e Constantes", expanded=True):
