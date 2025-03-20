@@ -8,8 +8,8 @@ BANCO_FILTROS = [
         "volume_8h": 19,
         "carga_areia_kg": 18,
         "quant_sacos_25kg": 1,
-        "diametro_mm": 325,
-        "altura_mm": 735,
+        "diametro_mm": 335,
+        "altura_mm": 583,
         "peso_bruto_com_areia_kg": 23.4,
         "peso_bruto_sem_areia_kg": 5.4,
         "modelo_motobomba": "BMC-25 M"
@@ -20,8 +20,8 @@ BANCO_FILTROS = [
         "volume_8h": 28,
         "carga_areia_kg": 25,
         "quant_sacos_25kg": 1,
-        "diametro_mm": 335,
-        "altura_mm": 583,
+        "diametro_mm": 325,
+        "altura_mm": 735,
         "peso_bruto_com_areia_kg": 34.13,
         "peso_bruto_sem_areia_kg": 9.13,
         "modelo_motobomba": "BMC-25 M"
