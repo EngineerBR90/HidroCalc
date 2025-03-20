@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as npe
 import bcrypt
-from modules import filtragem, transbordo, hidromassagem, perda_carga, memoria
+from modules import filtragem, transbordo, hidromassagem, perda_carga, memoria, database_equipamentos
 
 # Verifica se o usuário está autenticado
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
@@ -25,7 +25,7 @@ def main():
         # Título e navegação no topo da sidebar
         st.title("Navegação")
         page = st.radio("Selecione o módulo:",
-                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo"])
+                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo", "Database equipamentos"])
 
         # Espaço para empurrar o conteúdo para o final
         st.write("")  # Quebra de linha
@@ -83,6 +83,8 @@ def main():
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Memória de cálculo":
         memoria.run()
+    elif st.session_state.current_page == "Database equipamentos":
+        database_equipamentos.run()
 
 
 def show_home():
