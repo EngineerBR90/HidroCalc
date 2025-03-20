@@ -9,7 +9,7 @@ def run():
 
 
     # Seção 1: Dados Técnicos
-    with st.expander("🔧 Dados Técnicos e Constantes", expanded=True):
+    with st.expander("Dados Técnicos e Constantes", expanded=True):
         st.subheader("Propriedades do PVC")
         cols = st.columns(2)
         with cols[0]:
@@ -42,7 +42,7 @@ def run():
             """)
 
     # Seção 2: Equações Principais
-    with st.expander("🧮 Equações Fundamentais", expanded=True):
+    with st.expander("Equações Fundamentais", expanded=True):
         tab1, tab2, tab3 = st.tabs(["Darcy-Weisbach", "Hazen-Williams", "Reynolds"])
 
         with tab1:
@@ -91,7 +91,7 @@ def run():
             """)
 
     # Seção 3: Comparativo Teórico
-    with st.expander("⚖️ Comparação de Métodos"):
+    with st.expander("Comparação de Métodos"):
         st.subheader("Darcy-Weisbach vs Hazen-Williams")
 
         comparativo = pd.DataFrame({
@@ -134,7 +134,7 @@ def run():
         """)
 
     # Seção 4: Fluxograma de cálculo - Módulo Perda de Carga
-    with st.expander("📈 Fluxograma de Cálculo", expanded=True):
+    with st.expander("Fluxograma de Cálculo", expanded=True):
         st.markdown("""
         ### **Fluxo de Cálculo da Perda de Carga**        
         """)
@@ -225,7 +225,7 @@ def run():
         """)
 
     # Seção 5: Referências
-    with st.expander("📚 Bibliografia Recomendada"):
+    with st.expander("Bibliografia Recomendada"):
         st.markdown("""
         1. **Mecânica dos Fluidos** - R. C. Hibbeler  
         2. **Hidráulica Básica** - Rodrigo de Melo Porto  
