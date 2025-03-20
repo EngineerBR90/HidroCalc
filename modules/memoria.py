@@ -3,152 +3,162 @@ import streamlit as st
 import pandas as pd
 
 
-def exibir_teoria_colebrook():
-    with st.expander("🔍 Teoria do Método Colebrook-White"):
-        st.markdown("""
-        **Equação Original:**  
-        $$
-        \\frac{1}{\\sqrt{f}} = -2 \\log_{10}\\left( \\frac{\\varepsilon}{3.7D} + \\frac{2.51}{Re\\sqrt{f}} \\right)
-        $$
+def run():
+    st.title("📐 Memória de Cálculo Hidráulico")
 
-        **Parâmetros:**
-        - $f$: Fator de atrito de Darcy-Weisbach
-        - $Re$: Número de Reynolds ($Re = \\frac{VD}{\\nu}$)
-        - $\\varepsilon$: Rugosidade absoluta (PVC: 0.0000015 m)
-        - $D$: Diâmetro interno (m)
+    # Seção 1: Dados Técnicos
+    with st.expander("🔧 Dados Técnicos e Constantes", expanded=True):
+        st.subheader("Propriedades do PVC")
+        cols = st.columns(2)
+        with cols[0]:
+            st.markdown("""
+            **Diâmetros Nominais (mm):**
+            Segundo o catálogo Tigre
+            | Ext. | Int. |
+            |------|------|
+            | 25   | 21.6 |
+            | 32   | 27.8 |
+            | 40   | 35.2 |
+            | 50   | 44.0 |
+            | 60   | 53.4 |
+            | 75   | 66.6 |
+            | 85   | 75.6 |
+            | 110  | 97.8 |
+            """)
 
-        **Implementação Numérica:**
-        - Método Newton-Raphson (10⁻⁸ tolerância)
-        - Máximo 100 iterações
-        - Chute inicial: $f_0 = 0.02$
-        """)
+        with cols[1]:
+            st.markdown("""
+            **Rugosidade Absoluta:**
+            - PVC: ε = 0.0015 mm
+           """)
 
-        if st.checkbox("Mostrar algoritmo iterativo"):
-            st.code("""
-            def calcular_fator_atrito(Re, D_int):
-                if Re < 2000:
-                    return 64 / Re
+            st.markdown("""
+            **Viscosidade da Água:**
+            - 20°C: ν = 1.004 × 10⁻⁶ m²/s
+            - 30ºC: v = 0.798 × 10⁻⁶ m²/s
+            - 40°C: ν = 0.658 × 10⁻⁶ m²/s
+            """)
 
-                # Configuração Colebrook-White
-                x = 7.071  # 1/sqrt(0.02)
-                for _ in range(100):
-                    termo = (epsilon/(3.7*D)) + (2.51/(Re*x))
-                    f_x = x + 2*log10(termo)
-                    df_x = 1 + (2.51/(Re*termo*log(10))) / x**2
-                    x_novo = x - f_x/df_x
+    # Seção 2: Equações Principais
+    with st.expander("🧮 Equações Fundamentais", expanded=True):
+        tab1, tab2, tab3 = st.tabs(["Darcy-Weisbach", "Hazen-Williams", "Reynolds"])
 
-                    if abs(x_novo - x) < 1e-8:
-                        break
-                    x = x_novo
+        with tab1:
+            st.markdown("""
+            **Equação Geral:**
+            $$
+            h_f = f\\frac{L}{D}\\frac{V^2}{2g}
+            $$
 
-                return 1/x**2
-            """, language='python')
+            **Fator de Atrito (f):**
+            - Laminar (Re < 2000):  
+            $$ f = \\frac{64}{Re} $$
+            - Turbulento (Colebrook-White):  
+            $$ \\frac{1}{\\sqrt{f}} = -2\\log\\left(\\frac{\\epsilon}{3.7D} + \\frac{2.51}{Re\\sqrt{f}}\\right) $$
+            """)
 
+        with tab2:
+            st.markdown("""
+            **Fórmula Empírica:**
+            $$
+            h_f = 10.643\\cdot C^{-1.85}\\cdot D^{-4.87}\\cdot Q^{1.85}\\cdot L
+            $$
 
-def comparar_metodos(f_colebrook, Re, D_int):
-    with st.expander("⚖️ Comparativo com Outros Métodos"):
-        st.markdown("""
-        | Método          | Tipo       | Precisão | Aplicabilidade          |
-        |-----------------|------------|----------|-------------------------|
-        | Colebrook-White | Iterativo  | Alta     | Todos regimes turbulentos |
-        | Swamee-Jain     | Explícito  | Média    | Re > 5000               |
-        | Haaland         | Explícito  | Média    | Re > 4000               |
-        """)
+            **Coeficiente C:**
+            - PVC novo: 150  
+            - Aço soldado: 120  
+            - Cobre: 140
 
-        # Cálculos alternativos
-        epsilon = 0.0000015
-        D = D_int
+            *Aplicação típica:*
+            - Água em temperatura ambiente
+            - Diâmetros > 50 mm
+            - Velocidades < 3 m/s
+            """)
 
-        # Swamee-Jain
-        f_swamee = 0.25 / (math.log10((epsilon / (3.7 * D)) + (5.74 / (Re ** 0.9)))) ** 2
+        with tab3:
+            st.markdown("""
+            **Número de Reynolds:**
+            $$
+            Re = \\frac{VD}{\\nu}
+            $$
 
-        # Haaland
-        f_haaland = 1.8 * math.log10((epsilon / (3.7 * D) ** 1.11 + 6.9 / Re)) ** -2
+            **Classificação:**
+            - Laminar: Re < 2000  
+            - Transição: 2000 ≤ Re ≤ 4000  
+            - Turbulento: Re > 4000
+            """)
 
-        # DataFrame comparativo
-        df = pd.DataFrame({
-            'Método': ['Colebrook-White', 'Swamee-Jain', 'Haaland'],
-            'f calculado': [f_colebrook, f_swamee, f_haaland],
-            'Diferença (%)': [0,
-                              ((f_swamee - f_colebrook) / f_colebrook) * 100,
-                              ((f_haaland - f_colebrook) / f_colebrook) * 100]
+    # Seção 3: Comparativo Teórico
+    with st.expander("⚖️ Comparação de Métodos"):
+        st.subheader("Darcy-Weisbach vs Hazen-Williams")
+
+        comparativo = pd.DataFrame({
+            'Característica': [
+                'Base Teórica',
+                'Precisão',
+                'Complexidade',
+                'Aplicação Típica',
+                'Limitações'
+            ],
+            'Darcy-Weisbach': [
+                'Mecânica dos fluidos (teórico-experimental)',
+                'Alta em todas as condições',
+                'Alta (requer cálculo iterativo)',
+                'Sistemas pressurizados de alta precisão',
+                'Necessita dados de rugosidade'
+            ],
+            'Hazen-Williams': [
+                'Empírico (observação de sistemas reais)',
+                'Média em condições padrão',
+                'Baixa (fórmula direta)',
+                'Projetos prediais e distribuição de água',
+                'Não considera temperatura ou viscosidade'
+            ]
         })
 
-        st.dataframe(df.style.format({
-            'f calculado': '{:.6f}',
-            'Diferença (%)': '{:.2f}%'
-        }), use_container_width=True)
+        st.dataframe(
+            comparativo,
+            column_config={
+                "Darcy-Weisbach": "Darcy-Weisbach",
+                "Hazen-Williams": "Hazen-Williams"
+            },
+            hide_index=True
+        )
 
+        st.markdown("""
+        **Critério de Escolha:**
+        - Precisão científica → Darcy-Weisbach  
+        - Rapidez cálculo → Hazen-Williams  
+        - Normativas técnicas → Verificar padrão local
+        """)
 
-def exibir_detalhes_calculo(label, resultados):
-    with st.expander(f"📊 Detalhes Completo - {label}"):
-        col1, col2 = st.columns(2)
-
-        with col1:
+    # Seção 4: Normas e Verificações
+    with st.expander("📜 Critérios Normativos"):
+        cols = st.columns(2)
+        with cols[0]:
+            st.subheader("NBR 10.339:2018")
             st.markdown("""
-            **Parâmetros de Entrada**
-            - Vazão: {Q:.2f} m³/h
-            - Diâmetro externo: {diam_ext} mm
-            - Comprimento real: {L_real} m
-            """.format(**resultados['parametros']))
+            - Velocidade máxima sucção: **1.8 m/s**  
+            - Velocidade máxima recalque: **3.0 m/s**  
+                    """)
 
+        with cols[1]:
+            st.subheader("ASME B31.3")
             st.markdown("""
-            **Conexões Equivalentes**
-            - Total: {L_eq:.2f} m
-            - Composição: {conexoes}
-            """.format(**resultados['conexoes']))
+            - Fator segurança material: **0.5**  
+            - Pressão de teste: **1.5× operação**  
+            - Temperatura máxima de serviço PVC: **60°C**
+            """)
 
-        with col2:
-            st.markdown("""
-            **Resultados Intermediários**
-            - Velocidade: {V:.2f} m/s
-            - Reynolds: {Re:.0f}
-            - Fator atrito: {f:.6f}
-            """.format(**resultados['hidraulica']))
-
-            st.markdown("""
-            **Perdas de Carga**
-            - Distribuída: {hf_dist:.2f} mca
-            - Localizada: {hf_loc:.2f} mca
-            - Total (+5%): {hf_total:.2f} mca
-            """.format(**resultados['perdas']))
+    # Seção 5: Referências
+    with st.expander("📚 Bibliografia Recomendada"):
+        st.markdown("""
+        1. **Mecânica dos Fluidos** - R. C. Hibbeler  
+        2. **Hidráulica Básica** - Rodrigo de Melo Porto  
+        3. **Cálculo de Perda de Carga** - Tabela de seleção Schneider (ultimas páginas) 
+        4. **NBR 10.339:2018** - Piscina - Projeto, execução e manutenção  
+        """)
 
 
-def memoria_calculo(suc, rec, Q_m3h, diam_ext, L_real, conexoes, linha):
-    resultados = {
-        'parametros': {
-            'Q': Q_m3h,
-            'diam_ext': diam_ext,
-            'L_real': L_real
-        },
-        'conexoes': {
-            'L_eq': suc['L_eq'] if linha == 'suc' else rec['L_eq'],
-            'conexoes': dict(conexoes)
-        },
-        'hidraulica': {
-            'V': suc['V'] if linha == 'suc' else rec['V'],
-            'Re': suc['Re'] if linha == 'suc' else rec['Re'],
-            'f': suc['f'] if linha == 'suc' else rec['f']
-        },
-        'perdas': {
-            'hf_dist': 0.95 * (suc['hf_total'] if linha == 'suc' else rec['hf_total']),
-            'hf_loc': 0.05 * (suc['hf_total'] if linha == 'suc' else rec['hf_total']),
-            'hf_total': suc['hf_total'] if linha == 'suc' else rec['hf_total']
-        }
-    }
-
-    st.subheader(f"Memória de Cálculo - Linha de {linha.capitalize()}")
-
-    exibir_detalhes_calculo(linha.capitalize(), resultados)
-    comparar_metodos(resultados['hidraulica']['f'],
-                     resultados['hidraulica']['Re'],
-                     resultados['hidraulica']['D_int'] / 1000)
-    exibir_teoria_colebrook()
-
-# Modificação na função main() original (no módulo principal):
-# Adicionar após a exibição dos resultados:
-# from modules.memoria_calculo import memoria_calculo
-
-# if st.checkbox("Mostrar memória de cálculo completa"):
-#     memoria_calculo(suc, rec, Q_m3h, diam_ext_suc, L_real_suc, conexoes_suc, 'sucção')
-#     memoria_calculo(suc, rec, Q_m3h, diam_ext_rec, L_real_rec, conexoes_rec, 'recalque')
+if __name__ == "__main__":
+    run()

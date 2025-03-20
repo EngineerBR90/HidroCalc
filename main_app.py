@@ -82,7 +82,7 @@ def main():
     elif st.session_state.current_page == "Aquecimento":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Memória de cálculo":
-        memoria_calculo()
+        memoria.run()
 
 
 def show_home():
