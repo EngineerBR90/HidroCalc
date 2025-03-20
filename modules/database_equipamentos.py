@@ -357,7 +357,7 @@ def run():
                     mode='lines',
                     name='Curva Interpolada' if usar_scipy else 'Curva Linear',
                     line=dict(color='blue', width=2)
-                )  # Parêntese adicional
+                ))  # Parêntese adicional
 
                 # Pontos originais (CORREÇÃO AQUI)
                 fig.add_trace(go.Scatter(
@@ -366,7 +366,7 @@ def run():
                     mode='markers',
                     name='Dados Originais',
                     marker=dict(color='red', size=8)
-                )  # Parêntese adicional
+                )) # Parêntese adicional
 
                 fig.update_layout(
                     title=f'Curva de Desempenho - {modelo_selecionado}',
