@@ -1,8 +1,6 @@
 # modules/database_equipamentos.py
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
 BANCO_FILTROS = [
     {
@@ -315,44 +313,6 @@ def run():
                     "Potência (cv)": st.column_config.NumberColumn(format="%.2f cv")
                 }
             )
-
-        # Processamento dos dados para o gráfico
-        pontos = []
-        for coluna in df_filtrado.columns[2:]:  # Ignorar colunas Modelo e Potência
-            if pd.notna(df_filtrado[coluna].iloc[0]):
-                pressao = float(coluna.split()[0])
-                vazao = df_filtrado[coluna].iloc[0]
-                pontos.append((pressao, vazao))
-
-        if len(pontos) >= 2:
-            pontos_ordenados = sorted(pontos, key=lambda x: x[0])
-            pressoes = [p[0] for p in pontos_ordenados]
-            vazoes = [p[1] for p in pontos_ordenados]
-
-            # Interpolação linear
-            pressoes_interp = np.linspace(min(pressoes), max(pressoes), 100)
-            vazoes_interp = np.interp(pressoes_interp, pressoes, vazoes)
-
-            # Plotagem
-            fig, ax = plt.subplots()
-            ax.plot(vazoes_interp, pressoes_interp, label='Curva Interpolada')
-            ax.scatter(vazoes, pressoes, color='red', label='Dados Originais')
-            ax.set_xlabel('Vazão (m³/h)')
-            ax.set_ylabel('Pressão (m.c.a.)')
-            ax.set_title(f'Curva de Desempenho - {modelo_selecionado}')
-            ax.grid(True)
-            ax.legend()
-            st.pyplot(fig)
-        else:
-            st.warning("Dados insuficientes para gerar a curva")
-
-        # Botão de download para motobombas
-        st.download_button(
-            label="Baixar Dados de Motobombas (CSV)",
-            data=df_bombas.to_csv(index=False).encode('utf-8'),
-            file_name='motobombas.csv',
-            mime='text/csv'
-        )
 
         st.markdown("""
         **Legenda:**
