@@ -126,9 +126,8 @@ def run():
 
         st.markdown("""
         **Critério de Escolha:**
-        - Precisão científica → Darcy-Weisbach  
-        - Rapidez cálculo → Hazen-Williams  
-        - Normativas técnicas → Verificar padrão local
+        - Precisão científica → Darcy-Weisbach (recomendação de norma e a mais aceita por pesquisadores e autores)
+        - Rapidez cálculo → Hazen-Williams (resultados semelhantes à Fórmula de Flamant, que serve de base para tabela da Schneider de perda % para cada 100m de tubulação, )
         """)
 
     # Seção 4: Normas e Verificações
@@ -141,13 +140,13 @@ def run():
             - Velocidade máxima recalque: **3.0 m/s**  
                     """)
 
-        with cols[1]:
-            st.subheader("ASME B31.3")
-            st.markdown("""
-            - Fator segurança material: **0.5**  
-            - Pressão de teste: **1.5× operação**  
-            - Temperatura máxima de serviço PVC: **60°C**
-            """)
+        #with cols[1]:
+        #    st.subheader("ASME B31.3")
+        #   st.markdown("""
+        #    - Fator segurança material: **0.5**
+        #    - Pressão de teste: **1.5× operação**
+        #    - Temperatura máxima de serviço PVC: **60°C**
+        #    """)
 
     # Seção 5: Referências
     with st.expander("📚 Bibliografia Recomendada"):
