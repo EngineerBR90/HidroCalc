@@ -130,30 +130,103 @@ def run():
         - Rapidez cálculo → Hazen-Williams (resultados semelhantes à Fórmula de Flamant, que serve de base para tabela da Schneider de perda % para cada 100m de tubulação, )
         """)
 
-    # Seção 4: Normas e Verificações
-    with st.expander("📜 Critérios Normativos"):
-        cols = st.columns(2)
-        with cols[0]:
-            st.subheader("NBR 10.339:2018")
-            st.markdown("""
-            - Velocidade máxima sucção: **1.8 m/s**  
-            - Velocidade máxima recalque: **3.0 m/s**  
-                    """)
+    # Seção 4: Fluxograma de cálculo - Módulo Perda de Carga
+    with st.expander("📈 Fluxograma de Cálculo", expanded=True):
+        st.markdown("""
+        ### **Fluxo de Cálculo da Perda de Carga**        
+        """)
 
-        #with cols[1]:
-        #    st.subheader("ASME B31.3")
-        #   st.markdown("""
-        #    - Fator segurança material: **0.5**
-        #    - Pressão de teste: **1.5× operação**
-        #    - Temperatura máxima de serviço PVC: **60°C**
-        #    """)
+        with st.container(border=True):
+            st.markdown("""
+            **1. Entrada de Dados**  
+            ```python
+            Q_m3h = st.number_input("Vazão (m³/h)")      # Coleta da vazão
+            diam_ext = st.selectbox("Diâmetro Externo")    # Seleção do diâmetro
+            L_real = st.number_input("Comprimento Real")   # Comprimento da tubulação
+            ```
+            """)
+
+            st.markdown("**2. Processamento para Cada Linha**")
+            with st.container(border=True):
+                st.markdown(r"""
+                **2.1 Conversão de Diâmetro**  
+                $$
+                D_{int} = \frac{DIAMETROS[diam_{ext}]}{1000} \quad [m]
+                $$
+
+                **2.2 Cálculo da Velocidade**  
+                $$
+                Q = \frac{Q_{m³/h}}{3600} \quad [m³/s] \\\\
+                V = \frac{Q}{\pi D_{int}^2/4} \quad [m/s]
+                $$
+
+                **2.3 Número de Reynolds**  
+                $$
+                Re = \frac{V\,D_{int}}{1.004\times10^{-6}}
+                $$
+                """)
+
+            st.markdown("**3. Determinação do Fator de Atrito**")
+            with st.container(border=True):
+                st.markdown(r"""
+                $$
+                f =
+                \begin{cases} 
+                \frac{64}{Re}, & \text{se } Re < 2000 \\[10pt]
+                \text{Colebrook-White (iterativo):} \\[10pt]
+                \frac{1}{\sqrt{f}} = -2.0 \log_{10} \left( \frac{\varepsilon/D}{3.7} + \frac{2.51}{Re\,\sqrt{f}} \right), & \text{se } Re \geq 2000
+                \end{cases}
+                $$
+
+                Iterativamente, utiliza-se o método de Newton-Raphson:
+
+                $$
+                x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}
+                $$
+                """)
+
+            st.markdown(r"""
+            **4. Cálculo de Perdas**  
+            $$
+            h_f = 1.05 \cdot f \cdot \frac{L_{real} + L_{eq}}{D_{int}} \cdot \frac{V^2}{2g}
+            $$
+            """)
+
+        st.markdown(r"""
+        **5. Verificações Pós-Cálculo**  
+        ```python
+        # Validação de velocidades
+        if V_suc > 1.8: 
+            st.error("ALERTA: Excedeu velocidade máxima!")
+        if V_rec > 3.0:
+            st.error("ALERTA: Excedeu velocidade máxima!")
+        ```
+        """)
+
+        st.markdown(r"""
+        **6. Saída de Resultados**  
+        ```python
+        st.metric("Perda Total", f"{total_perda:.2f} mca")
+        st.json(detalhes_tecnicos)  # Exibe parâmetros calculados
+        ```
+        """)
+
+        st.markdown(r"""
+        ### **Diagrama de Blocos Simplificado**
+        ```
+        [Interface] → [Coleta Dados] → [Cálculo Linhas]  
+            → [Verificação Normas] → [Saída Resultados]
+              ↗         ↗ 
+            (Sucção)  (Recalque)
+        ```
+        """)
 
     # Seção 5: Referências
     with st.expander("📚 Bibliografia Recomendada"):
         st.markdown("""
         1. **Mecânica dos Fluidos** - R. C. Hibbeler  
         2. **Hidráulica Básica** - Rodrigo de Melo Porto  
-        3. **Cálculo de Perda de Carga** - Tabela de seleção Schneider (ultimas páginas) 
+        3. **Cálculo de Perda de Carga** - Tabela de seleção Schneider (últimas páginas)  
         4. **NBR 10.339:2018** - Piscina - Projeto, execução e manutenção  
         """)
 
