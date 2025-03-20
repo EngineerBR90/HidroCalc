@@ -1,10 +1,9 @@
-# modules/memoria_calculo.py
+# modules/memoria.py
 import streamlit as st
 import pandas as pd
 
-
 def run():
-    st.title("📐 Memória de Cálculo Hidráulico")
+    st.set_page_config(page_title="Memória Cálculo", layout="wide")
 
     # Seção 1: Dados Técnicos
     with st.expander("🔧 Dados Técnicos e Constantes", expanded=True):
