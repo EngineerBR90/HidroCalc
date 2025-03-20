@@ -1,6 +1,7 @@
 # modules/database_equipamentos.py
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 
 BANCO_FILTROS = [
     {
@@ -313,6 +314,72 @@ def run():
                     "Potência (cv)": st.column_config.NumberColumn(format="%.2f cv")
                 }
             )
+
+        # Processamento dos dados para o gráfico
+        pontos = []
+        for coluna in df_filtrado.columns[2:]:
+            if pd.notna(df_filtrado[coluna].iloc[0]):
+                pressao = float(coluna.split()[0])
+                vazao = df_filtrado[coluna].iloc[0]
+                pontos.append((vazao, pressao))  # Invertido para X/Y
+
+        if len(pontos) >= 2:
+            # Ordenar por vazão para interpolação
+            pontos_ordenados = sorted(pontos, key=lambda x: x[0])
+            vazoes = [p[0] for p in pontos_ordenados]
+            pressoes = [p[1] for p in pontos_ordenados]
+
+            # Interpolação cúbica
+            from scipy.interpolate import interp1d
+            try:
+                f = interp1d(vazoes, pressoes, kind='cubic', fill_value='extrapolate')
+                vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
+                pressoes_interp = f(vazoes_interp)
+            except:
+                # Fallback para interpolação linear se não houver pontos suficientes
+                vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
+                pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
+
+            # Criar gráfico com Plotly
+            fig = go.Figure()
+
+            # Curva interpolada
+            fig.add_trace(go.Scatter(
+                x=vazoes_interp,
+                y=pressoes_interp,
+                mode='lines',
+                name='Curva Interpolada',
+                line=dict(color='blue', width=2)
+            ))
+
+            # Pontos originais
+            fig.add_trace(go.Scatter(
+                x=vazoes,
+                y=pressoes,
+                mode='markers',
+                name='Dados Originais',
+                marker=dict(color='red', size=8)
+            ))
+
+            fig.update_layout(
+                title=f'Curva de Desempenho - {modelo_selecionado}',
+                xaxis_title='Vazão (m³/h)',
+                yaxis_title='Pressão (m.c.a.)',
+                showlegend=True,
+                template='plotly_white'
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Dados insuficientes para gerar a curva")
+
+        # Botão de download para motobombas
+        st.download_button(
+            label="Baixar Dados de Motobombas (CSV)",
+            data=df_bombas.to_csv(index=False).encode('utf-8'),
+            file_name='motobombas.csv',
+            mime='text/csv'
+        )
 
         st.markdown("""
         **Legenda:**
