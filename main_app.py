@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as npe
 import bcrypt
-from modules import filtragem, transbordo, hidromassagem, perda_carga
+from modules import filtragem, transbordo, hidromassagem, perda_carga, memoria
 
 # Verifica se o usuário está autenticado
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
@@ -25,7 +25,7 @@ def main():
         # Título e navegação no topo da sidebar
         st.title("Navegação")
         page = st.radio("Selecione o módulo:",
-                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga"])
+                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória cálculo"])
 
         # Espaço para empurrar o conteúdo para o final
         st.write("")  # Quebra de linha
@@ -81,6 +81,8 @@ def main():
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
         st.warning("Módulo em desenvolvimento! 🚧")
+    elif st.session_state.current_page == "Memória de cálculo":
+        perda_carga.main()
 
 
 def show_home():
@@ -94,11 +96,11 @@ def show_home():
     - Dimensionamento de motobombas para sistema de Hidromassagem
     - Banco de dados técnicos sobre equipamentos (Sodramar database)
     - Determinação da perda de carga com base na fórmula de Darcy com interações pelo método Newton-Raphson para Colebrook-White
+    - Memória de cálculo listando todas as equações, fórmulas, verificações e constantes são utilizados nas funções do módulo perda de carga
 
     **Módulos em desenvolvimento:**
     - Cascatas 
     - Aquecimento por trocador de calor elétrico (engenharia reversa da PLANILHA DE DIMENSIONAMENTO SODRAMAR)
-    - Verificação de velocidade de fluxo em linhas de sucção conforme NBR 10.339:2018 (módulo pronto, falta adaptar UI)
     - Verificação de suscetibilidade à cavitação (desenvolvimento impossibilitado por falta de info NPSHr do fornecedor Sodramar)
     """)
 
