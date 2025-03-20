@@ -371,7 +371,7 @@ def run():
                     mode='markers',
                     name='Dados Originais',
                     marker=dict(color='red', size=8)
-                )
+                ))
 
                 fig.update_layout(
                     title=f'Curva de Desempenho - {modelo_selecionado}',
