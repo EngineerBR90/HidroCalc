@@ -92,21 +92,6 @@ def calcular_linha(Q_m3h, diam_ext, L_real, conexoes):
     # Fator de atrito
     f = calcular_fator_atrito(Re, D_int)
 
-    # Adicione a nova função no módulo (em qualquer lugar antes da main(), sugiro após a calcular_fator_atrito)
-def perda_carga_hazen_williams(Q_m3h: float, diam_ext: float, L_real: float) -> float:
-        """
-        Calcula a perda de carga (hf) utilizando a equação de Hazen-Williams.
-        """
-        C = 150  # Coeficiente de Hazen-Williams para PVC
-        D_int = DIAMETROS.get(diam_ext, 0) / 1000  # Converter para metros
-        Q = Q_m3h / 3600  # Converter para m³/s
-
-        if D_int == 0:
-            return float('nan')
-
-        hf = 10.643 * (C ** -1.85) * (D_int ** -4.87) * (Q ** 1.85) * L_real
-        return hf
-
     # Comprimento equivalente das conexões
     L_eq = sum(qtd * CONEXOES_EQUIV[conexao].get(diam_ext, 0)
                for conexao, qtd in conexoes.items())
@@ -229,15 +214,13 @@ def main():
                     st.json({
                         "Reynolds": f"{suc['Re']:.0f}",
                         "Fator Atrito": f"{suc['f']:.6f}",
-                        "Comp. Equivalente": f"{suc['L_eq']:.2f} m",
-                        "Perda Hanzen-Williams": f"{perda_carga_hazen_williams(Q_m3h, diam_ext_suc, L_real_suc):.2f} mca"  # Nova linha
+                        "Comp. Equivalente": f"{suc['L_eq']:.2f} m"
                     })
                     st.write("**Recalque:**")
                     st.json({
                         "Reynolds": f"{rec['Re']:.0f}",
                         "Fator Atrito": f"{rec['f']:.6f}",
-                        "Comp. Equivalente": f"{rec['L_eq']:.2f} m",
-                        "Perda Hanzen-Williams": f"{perda_carga_hazen_williams(Q_m3h, diam_ext_rec, L_real_rec):.2f} mca"  # Nova linha
+                        "Comp. Equivalente": f"{rec['L_eq']:.2f} m"
                     })
 
 

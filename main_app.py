@@ -25,7 +25,7 @@ def main():
         # Título e navegação no topo da sidebar
         st.title("Navegação")
         page = st.radio("Selecione o módulo:",
-                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo", "Database equip"])
+                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo", "Database equipamentos"])
 
         # Espaço para empurrar o conteúdo para o final
         st.write("")  # Quebra de linha
@@ -83,7 +83,7 @@ def main():
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Memória de cálculo":
         memoria.run()
-    elif st.session_state.current_page == "Database equip":
+    elif st.session_state.current_page == "Database equipamentos":
         database_equipamentos.run()
 
 
