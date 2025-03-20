@@ -377,7 +377,7 @@ def run():
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
-                else:
+            else:
                 st.warning("Dados insuficientes para gerar a curva")
 
                 # Botão de download
