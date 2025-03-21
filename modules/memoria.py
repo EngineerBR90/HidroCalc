@@ -16,6 +16,7 @@ def run():
             st.markdown("""
             **Diâmetros Nominais (mm):**
             - Dados extraídos do catálogo da Tigre
+            
             | Ext. | Int. |
             |------|------|
             | 25   | 21.6 |
