@@ -263,6 +263,7 @@ def run():
             st.write(
                 f"- Vazão em {pressao_selecionada} m.c.a: {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
             st.write("**Curva da Motobomba:**")
+
             # Preparar dados para o gráfico
             pressoes = []
             vazoes = []
@@ -272,43 +273,60 @@ def run():
                 if bomba_selecionada.get(key) is not None:
                     pressoes.append(press)
                     vazoes.append(bomba_selecionada[key])
+
             # Criar gráfico com Plotly
-            if pressoes and vazoes:
+            if len(pressoes) >= 2 and len(vazoes) >= 2:
                 try:
-                    x = np.array(vazoes)
-                    y = np.array(pressoes)
-                    sort_idx = np.argsort(x)
-                    x_sorted = x[sort_idx]
-                    y_sorted = y[sort_idx]
-                    coeffs = np.polyfit(x_sorted, y_sorted, 3)
-                    poly = np.poly1d(coeffs)
+                    from scipy.interpolate import PchipInterpolator
+
+                    # Ordenar os dados por vazão
+                    sorted_pairs = sorted(zip(vazoes, pressoes), key=lambda x: x[0])
+                    x_sorted = np.array([p[0] for p in sorted_pairs])
+                    y_sorted = np.array([p[1] for p in sorted_pairs])
+
+                    # Criar interpolação PCHIP
+                    pchip = PchipInterpolator(x_sorted, y_sorted)
                     x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
-                    y_smooth = poly(x_smooth)
+                    y_smooth = pchip(x_smooth)
+
+                    # Configurar gráfico
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(
                         x=x_smooth,
                         y=y_smooth,
                         mode='lines',
-                        name='Curva Interpolada',
-                        line=dict(color='#1f77b4', width=3)
+                        name='Curva Característica',
+                        line=dict(color='#1f77b4', width=3),
+                        hoverinfo='skip'
                     ))
                     fig.add_trace(go.Scatter(
                         x=x_sorted,
                         y=y_sorted,
-                        mode='markers',
+                        mode='markers+text',
                         name='Dados do Fabricante',
-                        marker=dict(color='red', size=8)
+                        marker=dict(color='red', size=10),
+                        text=[f'({x}, {y})' for x, y in zip(x_sorted, y_sorted)],
+                        textposition='top center'
                     ))
                     fig.update_layout(
                         title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
                         xaxis_title='Vazão (m³/h)',
                         yaxis_title='Pressão (m.c.a)',
                         template='plotly_white',
-                        height=500
+                        height=500,
+                        showlegend=True
                     )
                     st.plotly_chart(fig, use_container_width=True)
+
                 except Exception as e:
                     st.error(f"Erro ao gerar curva: {str(e)}")
+                    # Fallback para interpolação linear
+                    x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                    y_smooth = np.interp(x_smooth, x_sorted, y_sorted)
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(x=x_smooth, y=y_smooth, mode='lines', name='Interpolação Linear'))
+                    fig.add_trace(go.Scatter(x=x_sorted, y=y_sorted, mode='markers', name='Dados do Fabricante'))
+                    st.plotly_chart(fig, use_container_width=True)
             else:
                 st.warning("Dados insuficientes para plotar a curva")
 
