@@ -15,7 +15,7 @@ def run():
         with cols[0]:
             st.markdown("""
             **Diâmetros Nominais (mm):**
-            Segundo o catálogo Tigre
+            - Dados extraídos do catálogo da Tigre
             | Ext. | Int. |
             |------|------|
             | 25   | 21.6 |
@@ -36,7 +36,7 @@ def run():
         with cols[1]:
             st.markdown("""
             **Viscosidade cinemática adotada nos cálculos:**
-              24°C: ν = 0.896 × 10⁻⁶ m²/s
+              - 24°C: ν = 0.896 × 10⁻⁶ m²/s
            """)
 
             st.markdown("""

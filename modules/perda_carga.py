@@ -87,7 +87,7 @@ def calcular_linha(Q_m3h, diam_ext, L_real, conexoes):
     V = Q / A if A > 0 else 0
 
     # Número de Reynolds
-    Re = V * D_int / 1.004e-6 if D_int > 0 else 0
+    Re = V * D_int / 0.896e-6 if D_int > 0 else 0
 
     # Fator de atrito
     f = calcular_fator_atrito(Re, D_int)
