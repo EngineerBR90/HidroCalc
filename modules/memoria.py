@@ -28,10 +28,15 @@ def run():
             | 110  | 97.8 |
             """)
 
+            st.markdown("""
+                        **Rugosidade Absoluta:**
+                        - PVC: ε = 0.0015 mm
+                       """)
+
         with cols[1]:
             st.markdown("""
-            **Rugosidade Absoluta:**
-            - PVC: ε = 0.0015 mm
+            **Viscosidade cinemática adotada nos cálculos:**
+              24°C: ν = 0.896 × 10⁻⁶ m²/s
            """)
 
             st.markdown("""
