@@ -294,126 +294,85 @@ def run():
             mime='text/csv'
         )
 
-    with st.expander("Motobombas Sodramar", expanded=True):
-        st.subheader("Curvas de Desempenho das Motobombas")
-        df_bombas = formatar_tabela_bombas()
+    with st.expander("🔍 Detalhes da Motobomba", expanded=True):
+        st.write("### Especificações Técnicas")
+        st.write(f"- **Modelo:** {bomba_selecionada['modelo']}")
+        st.write(f"- **Potência:** {bomba_selecionada['potencia_cv']} CV")
+        st.write(
+            f"- **Vazão em {pressao_selecionada} m.c.a:** {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
 
-        cols = st.columns([1, 3])
-        with cols[0]:
-            modelo_selecionado = st.selectbox(
-                "Selecione o Modelo:",
-                options=df_bombas["Modelo"].unique()
+        st.write("### Curva de Desempenho")
+        # Preparar os dados: coletar pontos (vazão, pressão)
+        pontos = []
+        possible_pressures = list(range(2, 19, 2))  # Pressões de 2 a 18 m.c.a.
+        for press in possible_pressures:
+            key = f'vazao_{press}_mca'
+            if bomba_selecionada.get(key) is not None:
+                pontos.append((bomba_selecionada[key], press))
+
+        if len(pontos) >= 2:
+            # Ordenar os pontos por vazão
+            pontos_ordenados = sorted(pontos, key=lambda p: p[0])
+            vazoes = np.array([p[0] for p in pontos_ordenados])
+            pressoes = np.array([p[1] for p in pontos_ordenados])
+
+            # Permitir a seleção do grau do polinômio para ajuste
+            grau_polinomio = st.slider(
+                "Grau do Polinômio para Ajuste",
+                min_value=1,
+                max_value=3,
+                value=2,
+                help="Selecione a complexidade da curva (1 = linear, 2 = quadrática, 3 = cúbica)"
             )
 
-        with cols[1]:
-            df_filtrado = df_bombas[df_bombas["Modelo"] == modelo_selecionado]
+            try:
+                # Ajuste polinomial com o grau selecionado
+                coeficientes = np.polyfit(vazoes, pressoes, grau_polinomio)
+                polinomio = np.poly1d(coeficientes)
 
-            # Ordenar colunas de pressão numericamente
-            colunas_pressao = df_filtrado.columns[2:]  # Ignorar as duas primeiras colunas (Modelo e Potência)
+                # Gerar pontos suaves para a curva
+                vazoes_interp = np.linspace(vazoes.min(), vazoes.max(), 100)
+                pressoes_interp = polinomio(vazoes_interp)
 
-            # Extrair valores numéricos das colunas e ordenar
-            colunas_ordenadas = sorted(colunas_pressao, key=lambda x: float(x.split()[0]))
-
-            # Reordenar o dataframe
-            df_ordenado = df_filtrado[['Modelo', 'Potência (cv)'] + colunas_ordenadas]
-
-            st.dataframe(
-                df_ordenado,
-                hide_index=True,
-                use_container_width=True,
-                column_config={
-                    "Potência (cv)": st.column_config.NumberColumn(format="%.2f cv")
-                }
-            )
-
-            # Processamento dos dados para o gráfico
-
-            pontos = []
-            for coluna in df_filtrado.columns[2:]:
-                if pd.notna(df_filtrado[coluna].iloc[0]):
-                    pressao = float(coluna.split()[0])
-                    vazao = df_filtrado[coluna].iloc[0]
-                    pontos.append((vazao, pressao))
-
-            if len(pontos) >= 2:
-                # Ordenar por vazão
-                pontos_ordenados = sorted(pontos, key=lambda x: x[0])
-                vazoes = np.array([p[0] for p in pontos_ordenados])
-                pressoes = np.array([p[1] for p in pontos_ordenados])
-
-                # Selecionar grau do polinômio (ajustável)
-                grau_polinomio = st.slider(
-                    "Grau do Polinômio para Ajuste",
-                    min_value=1,
-                    max_value=3,
-                    value=2,
-                    help="Selecione a complexidade da curva (1 = linear, 2 = quadrática, 3 = cúbica)"
+                # Criar o gráfico com Plotly
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=vazoes_interp,
+                    y=pressoes_interp,
+                    mode='lines',
+                    name=f'Ajuste Polinomial (Grau {grau_polinomio})',
+                    line=dict(color='blue', width=2)
+                ))
+                fig.add_trace(go.Scatter(
+                    x=vazoes,
+                    y=pressoes,
+                    mode='markers',
+                    name='Dados Originais',
+                    marker=dict(color='red', size=8)
+                ))
+                fig.update_layout(
+                    title=f'Curva de Desempenho - {bomba_selecionada["modelo"]}',
+                    xaxis_title='Vazão (m³/h)',
+                    yaxis_title='Pressão (m.c.a.)',
+                    template='plotly_white',
+                    showlegend=True
                 )
+                st.plotly_chart(fig, use_container_width=True)
 
-                try:
-                    # Ajuste polinomial
-                    coeficientes = np.polyfit(vazoes, pressoes, grau_polinomio)
-                    polinomio = np.poly1d(coeficientes)
+                # Exibir a equação do polinômio
+                eq_text = "Equação do Ajuste:\n"
+                grau_total = len(coeficientes) - 1
+                for i, coef in enumerate(coeficientes):
+                    power = grau_total - i
+                    eq_text += f"{coef:.3f}"
+                    if power > 0:
+                        eq_text += f"x^{power} + "
+                st.code(eq_text.rstrip(" + "))
 
-                    # Gerar pontos suaves
-                    vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
-                    pressoes_interp = polinomio(vazoes_interp)
-
-                    # Criar gráfico
-                    fig = go.Figure()
-
-                    # Curva ajustada
-                    fig.add_trace(go.Scatter(
-                        x=vazoes_interp,
-                        y=pressoes_interp,
-                        mode='lines',
-                        name=f'Ajuste Polinomial (Grau {grau_polinomio})',
-                        line=dict(color='blue', width=2)
-                    ))
-
-                    # Pontos originais
-                    fig.add_trace(go.Scatter(
-                        x=vazoes,
-                        y=pressoes,
-                        mode='markers',
-                        name='Dados Originais',
-                        marker=dict(color='red', size=8)
-                    ))
-
-                    fig.update_layout(
-                        title=f'Curva de Desempenho - {modelo_selecionado}',
-                        xaxis_title='Vazão (m³/h)',
-                        yaxis_title='Pressão (m.c.a.)',
-                        showlegend=True,
-                        template='plotly_white'
-                    )
-
-                    st.plotly_chart(fig, use_container_width=True)
-
-                    # Exibir equação
-                    eq_text = "Equação do Ajuste:\n"
-                    for i, coef in enumerate(coeficientes):
-                        power = len(coeficientes) - i - 1
-                        eq_text += f"{coef:.3f}"
-                        if power > 0:
-                            eq_text += f"x^{power} + "
-                    st.code(eq_text.rstrip(' + '))
-
-                except np.linalg.LinAlgError:
-                    st.error("Não foi possível calcular o ajuste. Reduza o grau do polinômio ou verifique os dados.")
-                    # Fallback para interpolação linear
-                    vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
-                    pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
-
-                    # Plotar versão simples
-                    fig = go.Figure()
-                    fig.add_trace(
-                        go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
-                    fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
-                    st.plotly_chart(fig, use_container_width=True)
-
-            else:
-                st.warning("Dados insuficientes para gerar a curva")
+            except np.linalg.LinAlgError:
+                st.error("Não foi possível calcular o ajuste. Tente reduzir o grau do polinômio ou verifique os dados.")
+        else:
+            st.warning("Dados insuficientes para gerar a curva")
 
                 # Botão de download
                 st.download_button(
