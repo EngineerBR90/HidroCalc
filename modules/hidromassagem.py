@@ -239,77 +239,7 @@ def run():
                     st.metric("Modelo", bomba_selecionada['modelo'])
                     st.metric("Potência", f"{bomba_selecionada['potencia_cv']} CV")
 
-                    with st.expander("🔍 Detalhes da Motobomba"):
-                        st.write(f"**Especificações Técnicas:**")
-                        st.write(f"- Modelo: {bomba_selecionada['modelo']}")
-                        st.write(f"- Potência: {bomba_selecionada['potencia_cv']} CV")
-                        st.write(
-                            f"- Vazão em {pressao_selecionada} m.c.a: {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
 
-                        st.write("**Curva da Motobomba:**")
-                        # Preparar dados para o gráfico
-                        pressoes = []
-                        vazoes = []
-                        possible_pressures = list(range(2, 19, 2))  # De 2 a 18 mca
-                        for press in possible_pressures:
-                            key = f'vazao_{press}_mca'
-                            if bomba_selecionada.get(key) is not None:
-                                pressoes.append(press)
-                                vazoes.append(bomba_selecionada[key])
-
-                        # Criar gráfico com Plotly
-                        if pressoes and vazoes:
-                            try:
-                                # Converte para arrays numpy e ordena
-                                x = np.array(vazoes)
-                                y = np.array(pressoes)
-                                sort_idx = np.argsort(x)
-                                x_sorted = x[sort_idx]
-                                y_sorted = y[sort_idx]
-
-                                # Cria interpolação polinomial de 3º grau
-                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
-                                poly = np.poly1d(coeffs)
-
-                                # Gera pontos suaves
-                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
-                                y_smooth = poly(x_smooth)
-
-                                # Cria figura
-                                fig = go.Figure()
-
-                                # Curva suave
-                                fig.add_trace(go.Scatter(
-                                    x=x_smooth,
-                                    y=y_smooth,
-                                    mode='lines',
-                                    name='Curva Interpolada',
-                                    line=dict(color='#1f77b4', width=3)
-                                ))
-
-                                # Pontos originais
-                                fig.add_trace(go.Scatter(
-                                    x=x_sorted,
-                                    y=y_sorted,
-                                    mode='markers',
-                                    name='Dados do Fabricante',
-                                    marker=dict(color='red', size=8)
-                                ))
-
-                                fig.update_layout(
-                                    title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
-                                    xaxis_title='Vazão (m³/h)',
-                                    yaxis_title='Pressão (m.c.a)',
-                                    template='plotly_white',
-                                    height=500
-                                )
-
-                                st.plotly_chart(fig, use_container_width=True)
-
-                            except Exception as e:
-                                st.error(f"Erro ao gerar curva: {str(e)}")
-                        else:
-                            st.warning("Dados insuficientes para plotar a curva")
                 else:
                     st.error("Nenhuma motobomba adequada encontrada!")
                     st.warning("""
@@ -323,18 +253,90 @@ def run():
 
             st.markdown("---")
 
+    with st.expander("🔍 Detalhes da Motobomba"):
+        st.write(f"**Especificações Técnicas:**")
+        st.write(f"- Modelo: {bomba_selecionada['modelo']}")
+        st.write(f"- Potência: {bomba_selecionada['potencia_cv']} CV")
+        st.write(
+            f"- Vazão em {pressao_selecionada} m.c.a: {bomba_selecionada[f'vazao_{pressao_selecionada}_mca']} m³/h")
+
+        st.write("**Curva da Motobomba:**")
+        # Preparar dados para o gráfico
+        pressoes = []
+        vazoes = []
+        possible_pressures = list(range(2, 19, 2))  # De 2 a 18 mca
+        for press in possible_pressures:
+            key = f'vazao_{press}_mca'
+            if bomba_selecionada.get(key) is not None:
+                pressoes.append(press)
+                vazoes.append(bomba_selecionada[key])
+
+        # Criar gráfico com Plotly
+        if pressoes and vazoes:
+            try:
+                # Converte para arrays numpy e ordena
+                x = np.array(vazoes)
+                y = np.array(pressoes)
+                sort_idx = np.argsort(x)
+                x_sorted = x[sort_idx]
+                y_sorted = y[sort_idx]
+
+                # Cria interpolação polinomial de 3º grau
+                coeffs = np.polyfit(x_sorted, y_sorted, 3)
+                poly = np.poly1d(coeffs)
+
+                # Gera pontos suaves
+                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                y_smooth = poly(x_smooth)
+
+                # Cria figura
+                fig = go.Figure()
+
+                # Curva suave
+                fig.add_trace(go.Scatter(
+                    x=x_smooth,
+                    y=y_smooth,
+                    mode='lines',
+                    name='Curva Interpolada',
+                    line=dict(color='#1f77b4', width=3)
+                ))
+
+                # Pontos originais
+                fig.add_trace(go.Scatter(
+                    x=x_sorted,
+                    y=y_sorted,
+                    mode='markers',
+                    name='Dados do Fabricante',
+                    marker=dict(color='red', size=8)
+                ))
+
+                fig.update_layout(
+                    title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
+                    xaxis_title='Vazão (m³/h)',
+                    yaxis_title='Pressão (m.c.a)',
+                    template='plotly_white',
+                    height=500
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+            except Exception as e:
+                st.error(f"Erro ao gerar curva: {str(e)}")
+        else:
+            st.warning("Dados insuficientes para plotar a curva")
+
     # Integração com Projeto Completo
-    if "projeto" in st.session_state and st.button("Salvar no Projeto Completo"):
-        equipamento = {
-            "sistema": "Hidromassagem",
-            "tipo": tipo_dispositivo,
-            "quantidade": quantidade,
-            "vazao": vazao_necessaria if 'vazao_necessaria' in locals() else None,
-            "pressao": pressao_selecionada,
-            "bomba": bomba_selecionada['modelo'] if bomba_selecionada else None
-        }
-        st.session_state.projeto["equipamentos"]["Hidromassagem"] = equipamento
-        st.success("Configuração salva no projeto!")
+    #if "projeto" in st.session_state and st.button("Salvar no Projeto Completo"):
+    #    equipamento = {
+    #       "sistema": "Hidromassagem",
+    #        "tipo": tipo_dispositivo,
+    #        "quantidade": quantidade,
+    #        "vazao": vazao_necessaria if 'vazao_necessaria' in locals() else None,
+    #        "pressao": pressao_selecionada,
+    #        "bomba": bomba_selecionada['modelo'] if bomba_selecionada else None
+    #    }
+    #    st.session_state.projeto["equipamentos"]["Hidromassagem"] = equipamento
+    #    st.success("Configuração salva no projeto!")
 
 
 if __name__ == "__main__":
