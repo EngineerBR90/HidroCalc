@@ -222,70 +222,73 @@ def run():
 
                         st.write("**Curva da Motobomba:**")
                         # Preparar dados para o gráfico
+                        # Preparar dados para o gráfico
                         pressoes = []
                         vazoes = []
+                        possible_pressures = list(range(2, 19, 2))  # De 2 a 18 mca
                         for press in possible_pressures:
                             key = f'vazao_{press}_mca'
-                            if selected_pump.get(key) is not None:
+                            if bomba_selecionada.get(key) is not None:
                                 pressoes.append(press)
-                                vazoes.append(selected_pump[key])
+                                vazoes.append(bomba_selecionada[key])
 
                         # Criar gráfico com Plotly
-                        if pressoes and vazoes:
-                            # --- NOVO CÓDIGO A PARTIR DAQUI ---
+                        if len(pressoes) >= 2 and len(vazoes) >= 2:
                             try:
-                                # Converte para arrays numpy e ordena
-                                x = np.array(vazoes)
-                                y = np.array(pressoes)
-                                sort_idx = np.argsort(x)
-                                x_sorted = x[sort_idx]
-                                y_sorted = y[sort_idx]
+                                from scipy.interpolate import PchipInterpolator
 
-                                # Cria interpolação polinomial de 3º grau
-                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
-                                poly = np.poly1d(coeffs)
+                                # Ordenar os dados por vazão
+                                sorted_pairs = sorted(zip(vazoes, pressoes), key=lambda x: x[0])
+                                x_sorted = np.array([p[0] for p in sorted_pairs])
+                                y_sorted = np.array([p[1] for p in sorted_pairs])
 
-                                # Gera pontos suaves
+                                # Criar interpolação PCHIP
+                                pchip = PchipInterpolator(x_sorted, y_sorted)
                                 x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
-                                y_smooth = poly(x_smooth)
+                                y_smooth = pchip(x_smooth)
 
-                                # Cria figura
+                                # Configurar gráfico
                                 fig = go.Figure()
-
-                                # Curva suave
                                 fig.add_trace(go.Scatter(
                                     x=x_smooth,
                                     y=y_smooth,
                                     mode='lines',
-                                    name='Curva Interpolada',
-                                    line=dict(color='#1f77b4', width=3)
+                                    name='Curva Característica',
+                                    line=dict(color='#1f77b4', width=3),
+                                    hoverinfo='skip'
                                 ))
-
-                                # Pontos originais
                                 fig.add_trace(go.Scatter(
                                     x=x_sorted,
                                     y=y_sorted,
-                                    mode='markers',
+                                    mode='markers+text',
                                     name='Dados do Fabricante',
-                                    marker=dict(color='red', size=8)
+                                    marker=dict(color='red', size=10),
+                                    text=[f'({x}, {y})' for x, y in zip(x_sorted, y_sorted)],
+                                    textposition='top center'
                                 ))
-
                                 fig.update_layout(
-                                    title=f'Curva da Motobomba {selected_pump["modelo"]}',
+                                    title=f'Curva da Motobomba {bomba_selecionada["modelo"]}',
                                     xaxis_title='Vazão (m³/h)',
                                     yaxis_title='Pressão (m.c.a)',
                                     template='plotly_white',
-                                    height=500
+                                    height=500,
+                                    showlegend=True
                                 )
-
                                 st.plotly_chart(fig, use_container_width=True)
 
                             except Exception as e:
                                 st.error(f"Erro ao gerar curva: {str(e)}")
-                            # --- FIM DO NOVO CÓDIGO ---
-
+                                # Fallback para interpolação linear
+                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
+                                y_smooth = np.interp(x_smooth, x_sorted, y_sorted)
+                                fig = go.Figure()
+                                fig.add_trace(go.Scatter(x=x_smooth, y=y_smooth, mode='lines', name='Interpolação Linear'))
+                                fig.add_trace(go.Scatter(x=x_sorted, y=y_sorted, mode='markers', name='Dados do Fabricante'))
+                                st.plotly_chart(fig, use_container_width=True)
                         else:
                             st.warning("Dados insuficientes para plotar a curva")
+
+
                 else:
                     st.warning("""
                     **Recomendações:**
