@@ -308,6 +308,29 @@ def run():
                 options=df_bombas["Modelo"].unique()
             )
 
+            # ===== NOVO CAMPO DE VERIFICAÇÃO =====
+            verificar_ponto = st.checkbox("Verificação do ponto de funcionamento da MB")
+            curva_instalacao = None
+
+            if verificar_ponto:
+                funcao_usuario = st.text_area("Cole a função da curva da instalação (formato Python):",
+                                              height=100,
+                                              help="Exemplo:\ndef curva_instalacao(Q):\n    return 0.0023 * Q**2")
+
+                try:
+                    # Executa a função do usuário em um ambiente controlado
+                    local_env = {}
+                    exec(funcao_usuario, globals(), local_env)
+                    curva_instalacao = local_env.get('curva_instalacao')
+
+                    if not callable(curva_instalacao):
+                        st.error("Função inválida! Certifique-se de usar o nome exato 'curva_instalacao'")
+                        curva_instalacao = None
+
+                except Exception as e:
+                    st.error(f"Erro na função: {str(e)}")
+                    curva_instalacao = None
+
         with cols[1]:
             df_filtrado = df_bombas[df_bombas["Modelo"] == modelo_selecionado]
 
@@ -330,7 +353,6 @@ def run():
             )
 
             # Processamento dos dados para o gráfico
-
             pontos = []
             for coluna in df_filtrado.columns[2:]:
                 if pd.notna(df_filtrado[coluna].iloc[0]):
@@ -339,6 +361,8 @@ def run():
                     pontos.append((vazao, pressao))
 
             if len(pontos) >= 2:
+                q_point = None
+                h_point = None
                 # Ordenar por vazão
                 pontos_ordenados = sorted(pontos, key=lambda x: x[0])
                 vazoes = np.array([p[0] for p in pontos_ordenados])
@@ -362,15 +386,71 @@ def run():
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = polinomio(vazoes_interp)
 
+                    # NOVO CÓDIGO 1/3 - Cálculo da curva da instalação
+                    pressoes_sistema = []
+                    anotacoes = []
+                    shapes = []
+
+                    if verificar_ponto and curva_instalacao:
+                        try:
+                            # Gerar pontos da curva de instalação
+                            pressoes_sistema = [curva_instalacao(q) for q in vazoes_interp]
+
+                            # Encontrar pontos de interseção
+                            diferenca = pressoes_interp - pressoes_sistema
+                            cruzamentos = np.where(np.diff(np.sign(diferenca)))[0]
+
+                            # Processar cada cruzamento
+                            for idx in cruzamentos:
+                                # Interpolação linear para precisão
+                                x0, x1 = vazoes_interp[idx], vazoes_interp[idx + 1]
+                                y0, y1 = diferenca[idx], diferenca[idx + 1]
+                                raiz = x0 - y0 * (x1 - x0) / (y1 - y0)
+                                q_point = raiz
+                                h_point = polinomio(raiz)
+
+                                # Configurar anotações
+                                anotacoes.append(dict(
+                                    x=q_point,
+                                    y=h_point,
+                                    text=f"Ponto de Operação<br>Q: {q_point:.1f} m³/h<br>H: {h_point:.1f} mca",
+                                    showarrow=True,
+                                    arrowhead=3,
+                                    ax=20,
+                                    ay=-40
+                                ))
+
+                                # Linhas auxiliares
+                                shapes.append(dict(
+                                    type="line",
+                                    x0=q_point,
+                                    y0=0,
+                                    x1=q_point,
+                                    y1=h_point,
+                                    line=dict(color="#666666", dash="dot", width=1)
+                                ))
+                        except Exception as e:
+                            st.error(f"Erro na curva da instalação: {str(e)}")
+
                     # Criar gráfico
                     fig = go.Figure()
+
+                    # NOVO CÓDIGO 2/3 - Adicionar curva da instalação
+                    if verificar_ponto and curva_instalacao:
+                        fig.add_trace(go.Scatter(
+                            x=vazoes_interp,
+                            y=pressoes_sistema,
+                            mode='lines',
+                            name='Curva da Instalação',
+                            line=dict(color='green', width=2, dash='dash')
+                        ))
 
                     # Curva ajustada
                     fig.add_trace(go.Scatter(
                         x=vazoes_interp,
                         y=pressoes_interp,
                         mode='lines',
-                        name=f'Ajuste Polinomial (Grau {grau_polinomio})',
+                        name=f'Curva da Bomba (Grau {grau_polinomio})',
                         line=dict(color='blue', width=2)
                     ))
 
@@ -383,6 +463,13 @@ def run():
                         marker=dict(color='red', size=8)
                     ))
 
+                    # NOVO CÓDIGO 3/3 - Adicionar anotações
+                    if anotacoes:
+                        fig.update_layout(
+                            annotations=anotacoes,
+                            shapes=shapes
+                        )
+
                     fig.update_layout(
                         title=f'Curva de Desempenho - {modelo_selecionado}',
                         xaxis_title='Vazão (m³/h)',
@@ -392,6 +479,15 @@ def run():
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
+
+                    # Exibir informações do ponto de operação
+                    if anotacoes:
+                        st.success("**Ponto de Operação Encontrado**")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Vazão Operacional", f"{q_point:.1f} m³/h")
+                        with col2:
+                            st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
                     # Exibir equação
                     eq_text = "Equação do Ajuste:\n"
@@ -415,22 +511,36 @@ def run():
                     fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
                     st.plotly_chart(fig, use_container_width=True)
 
+
+
             else:
+
                 st.warning("Dados insuficientes para gerar a curva")
 
                 # Botão de download
+
                 st.download_button(
+
                     label="Baixar Dados de Motobombas (CSV)",
+
                     data=df_bombas.to_csv(index=False).encode('utf-8'),
+
                     file_name='motobombas.csv',
+
                     mime='text/csv'
+
                 )
 
         st.markdown("""
-        **Legenda:**
-        - Valores em m³/h para diferentes alturas manométricas
-        - 'None' indica valor não especificado pelo fabricante
-        """)
+
+                    **Legenda:**
+
+                    - Valores em m³/h para diferentes alturas manométricas
+
+                    - 'None' indica valor não especificado pelo fabricante
+
+                    """)
+
 
 
 if __name__ == "__main__":

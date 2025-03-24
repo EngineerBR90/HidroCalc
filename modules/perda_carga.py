@@ -223,7 +223,7 @@ def main():
                         "Comp. Equivalente": f"{rec['L_eq']:.2f} m"
                     })
 
-                with st.expander("📈 Função da Curva Característica da Instalação"):
+                with st.expander("Função da Curva Característica da Instalação"):
                     # Calcular coeficiente K da curva (H = K*Q²)
                     try:
                         Q_ref = Q_m3h  # Vazão de referência usada no cálculo
