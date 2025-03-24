@@ -223,6 +223,32 @@ def main():
                         "Comp. Equivalente": f"{rec['L_eq']:.2f} m"
                     })
 
+                with st.expander("📈 Função da Curva Característica da Instalação"):
+                    # Calcular coeficiente K da curva (H = K*Q²)
+                    try:
+                        Q_ref = Q_m3h  # Vazão de referência usada no cálculo
+                        H_total_ref = total_perda  # Perda total na vazão de referência
+                        K = H_total_ref / (Q_ref ** 2) if Q_ref != 0 else 0
+
+                        # Gerar função em formato Python copiável
+                        funcao_curva = f"def curva_instalacao(Q):\n    return {K:.6f} * Q**2"
+
+                        st.markdown("**Função Matemática da Curva:**")
+                        st.latex(f"H_{{sistema}}(Q) = {K:.4f} \cdot Q^2")
+
+                        st.markdown("**Código Python para Exportação:**")
+                        st.code(funcao_curva, language='python')
+
+                        st.info("""
+                        **Instruções de uso:**
+                        1. Copie a função acima
+                        2. Cole no módulo Database_equipamentos
+                        3. Compare a curva gerada com a da motobomba para determinar o ponto de funcionamento da MB
+                        """)
+
+                    except ZeroDivisionError:
+                        st.error("Erro: Vazão não pode ser zero para gerar a curva!")
+
 
 
                 # Alertas normativos
