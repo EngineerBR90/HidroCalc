@@ -30,7 +30,7 @@ def main():
 
         if st.session_state.get("username") == "kiara":
             st.markdown("---")
-            if st.button("📊 Relatórios Admin"):
+            if st.button("🔒 Relatórios Kiara"):
                 from modules import report
                 report.run()
                 st.stop()
