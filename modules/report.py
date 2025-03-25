@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 from supabase import create_client
-import matplotlib.pyplot as plt
 
 
 def run():
@@ -24,33 +23,40 @@ def run():
         data = supabase.table('access_logs').select("*").execute().data
         df = pd.DataFrame(data)
 
-        # Armazenar filtros na sessão para evitar recarregamento
-        if 'filtro_modulo' not in st.session_state:
-            st.session_state.filtro_modulo = "Todos"
+        ## CORREÇÃO 1: Inicialização correta dos filtros na sessão
+        session_keys = {
+            'filtro_modulo': "Todos",
+            'filtro_usuario': "Todos"
+        }
 
-        if 'filtro_usuario' not in st.session_state:
-            st.session_state.filtro_usuario = "Todos"
+        for key, default in session_keys.items():
+            if key not in st.session_state:
+                st.session_state[key] = default
 
         # Seção de filtros
         with st.container():
-            st.subheader("Filtros Avançados")
+            st.subheader("Filtros")
             col1, col2 = st.columns(2)
 
             with col1:
-                novo_filtro_modulo = st.selectbox(
+                ## CORREÇÃO 2: Manter estado do filtro de módulo
+                novo_modulo = st.selectbox(
                     "Módulo:",
                     ["Todos"] + sorted(df['module'].unique()),
-                    key="select_modulo"
+                    index=0 if st.session_state.filtro_modulo == "Todos" else 1,
+                    key="filtro_modulo_selector"
                 )
-                st.session_state.filtro_modulo = novo_filtro_modulo
+                st.session_state.filtro_modulo = novo_modulo
 
             with col2:
-                novo_filtro_usuario = st.selectbox(
+                ## CORREÇÃO 3: Manter estado do filtro de usuário
+                novo_usuario = st.selectbox(
                     "Usuário:",
                     ["Todos"] + sorted(df['username'].unique()),
-                    key="select_usuario"
+                    index=0 if st.session_state.filtro_usuario == "Todos" else 1,
+                    key="filtro_usuario_selector"
                 )
-                st.session_state.filtro_usuario = novo_filtro_usuario
+                st.session_state.filtro_usuario = novo_usuario
 
         # Aplicar filtros
         df_filtrado = df.copy()
@@ -65,103 +71,77 @@ def run():
             st.subheader("Indicadores Chave")
             col_metrics = st.columns(3)
 
-            with col_metrics[0]:
-                st.metric("Acessos Totais", len(df_filtrado))
+            metrics = [
+                ("Acessos Totais", len(df_filtrado)),
+                ("Módulos Únicos", df_filtrado['module'].nunique()),
+                ("Usuários Únicos", df_filtrado['username'].nunique())
+            ]
 
-            with col_metrics[1]:
-                st.metric("Módulos Únicos", df_filtrado['module'].nunique())
-
-            with col_metrics[2]:
-                st.metric("Usuários Únicos", df_filtrado['username'].nunique())
+            for (label, value), col in zip(metrics, col_metrics):
+                with col:
+                    st.metric(label, value)
 
         # Análise de rankings
         with st.container():
-            st.subheader("Análise de Engagement")
+            st.subheader("Rankings")
             col_rankings = st.columns(2)
 
             with col_rankings[0]:
-                st.write("**Top Módulos**")
-                modulos = df_filtrado['module'].value_counts().reset_index()
-                modulos.columns = ['Módulo', 'Acessos']
+                st.markdown("**Top 5 Módulos**")
+                modulos = df_filtrado['module'].value_counts().nlargest(5)
                 st.dataframe(
-                    modulos.style
-                    .bar(color='#5fba7d', subset=['Acessos']),
-                    use_container_width=True,
-                    hide_index=True
+                    modulos.reset_index().rename(columns={'index': 'Módulo', 'module': 'Acessos'}),
+                    hide_index=True,
+                    use_container_width=True
                 )
 
             with col_rankings[1]:
-                st.write("**Top Usuários**")
-                usuarios = df_filtrado['username'].value_counts().reset_index()
-                usuarios.columns = ['Usuário', 'Acessos']
+                st.markdown("**Top 5 Usuários**")
+                usuarios = df_filtrado['username'].value_counts().nlargest(5)
                 st.dataframe(
-                    usuarios.style
-                    .bar(color='#5f99ba', subset=['Acessos']),
-                    use_container_width=True,
-                    hide_index=True
+                    usuarios.reset_index().rename(columns={'index': 'Usuário', 'username': 'Acessos'}),
+                    hide_index=True,
+                    use_container_width=True
                 )
-
-        # Visualização temporal
-        with st.container():
-            st.subheader("Distribuição Temporal")
-            df_temp = df_filtrado.copy()
-            df_temp['data'] = pd.to_datetime(df_temp['created_at']).dt.date
-
-            if not df_temp.empty:
-                fig, ax = plt.subplots()
-                df_temp.groupby('data').size().plot(
-                    kind='line',
-                    ax=ax,
-                    marker='o',
-                    color='#5fba7d'
-                )
-                ax.set_title("Acessos Diários")
-                ax.set_xlabel("Data")
-                ax.set_ylabel("Número de Acessos")
-                st.pyplot(fig)
-            else:
-                st.warning("Sem dados para o período selecionado")
 
         # Exportação de dados
         with st.container():
             st.subheader("Exportação de Dados")
+            col1, col2 = st.columns(2)
 
-            # Criar versão pivotada
-            df_pivot = pd.crosstab(
-                index=df_filtrado['username'],
-                columns=df_filtrado['module'],
-                margins=True,
-                margins_name='TOTAL'
-            ).reset_index()
+            ## CORREÇÃO 4: Formatação CSV para Excel
+            with col1:
+                st.markdown("**Dados Brutos**")
+                csv_bruto = df_filtrado[['created_at', 'username', 'module']].rename(columns={
+                    'created_at': 'Data_Hora',
+                    'username': 'Usuario',
+                    'module': 'Modulo'
+                }).to_csv(index=False, sep=';', date_format='%Y-%m-%d %H:%M:%S')
 
-            col_export = st.columns([2, 1, 1])
-
-            with col_export[0]:
-                st.write("**Visualização Prévia**")
-                st.dataframe(
-                    df_pivot.style
-                    .background_gradient(cmap='Blues', subset=df_pivot.columns[1:-1])
-                    .format(precision=0),
-                    height=300,
-                    use_container_width=True
-                )
-
-            with col_export[1]:
-                st.write("**Exportar Bruto**")
                 st.download_button(
-                    label="CSV Simples",
-                    data=df_filtrado.to_csv(index=False, sep=';').encode('utf-8'),
+                    label="Baixar CSV Bruto",
+                    data=csv_bruto,
                     file_name="acessos_brutos.csv",
-                    mime="text/csv"
+                    mime="text/csv",
+                    help="Formato ideal para Excel (colunas separadas)"
                 )
 
-            with col_export[2]:
-                st.write("**Exportar Consolidado**")
+            with col2:
+                st.markdown("**Dados Agregados**")
+                df_pivot = pd.crosstab(
+                    index=df_filtrado['username'],
+                    columns=df_filtrado['module'],
+                    margins=True,
+                    margins_name='TOTAL'
+                )
+                csv_agregado = df_pivot.to_csv(sep=';', decimal=',')
+
                 st.download_button(
-                    label="CSX Estruturado",
-                    data=df_pivot.to_csv(index=False, sep=';').encode('utf-8'),
-                    file_name="acessos_estruturados.csv",
-                    mime="text/csv"
+                    label="Baixar CSV Agregado",
+                    data=csv_agregado,
+                    file_name="acessos_agregados.csv",
+                    mime="text/csv",
+                    help="Visão consolidada por usuário e módulo"
                 )
 
     except Exception as e:
