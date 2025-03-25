@@ -22,7 +22,7 @@ def get_supabase():
 
 
 def track_access(module_name):
-    """Decorador para registrar acesso aos módulos com tratamento de erros"""
+    """Decorador para registrar acesso aos módulos"""
 
     def decorador(func):
         def wrapper(*args, **kwargs):
@@ -31,19 +31,19 @@ def track_access(module_name):
 
             try:
                 if 'username' in st.session_state:
-                    duration = round(time.time() - start_time, 2)
+                    duration = time.time() - start_time
 
-                    # Conexão segura
                     supabase = get_supabase()
                     if supabase:
+                        # Converter para float explícito
                         supabase.table('access_logs').insert({
                             "username": st.session_state.username,
                             "module": module_name,
-                            "duration": duration
+                            "duration": float(round(duration, 2))  # ← Conversão explícita
                         }).execute()
 
             except Exception as e:
-                st.toast(f"⚠️ Erro no registro de uso: {str(e)}", icon="⚠️")
+                st.toast(f"⚠️ Erro no registro: {str(e)}", icon="⚠️")
 
             return result
 
