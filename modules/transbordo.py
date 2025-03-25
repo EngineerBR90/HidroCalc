@@ -3,6 +3,7 @@ import math
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+from tracking import track_access
 
 # noinspection PyInterpreter
 BANCO_BOMBAS = [
@@ -138,6 +139,7 @@ BANCO_BOMBAS = [
     }
 ]
 
+@track_access("transbordo")
 def run():
     st.title("💧 Módulo Transbordo")
     st.markdown("---")

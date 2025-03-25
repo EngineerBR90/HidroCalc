@@ -5,3 +5,4 @@ plotly>=5.18.0
 bcrypt
 scipy>=1.10.0
 matplotlib>=3.7.1
+supabase>=2.3.1

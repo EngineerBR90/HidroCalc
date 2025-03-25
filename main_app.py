@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as npe
 import bcrypt
+from tracking import track_access
 from modules import filtragem, transbordo, hidromassagem, perda_carga, memoria, database_equipamentos
 
 # Verifica se o usuário está autenticado
@@ -26,6 +27,13 @@ def main():
         st.title("Navegação")
         page = st.radio("Selecione o módulo:",
                         ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo", "Database equipamentos"])
+
+        if st.session_state.get("username") == "kiara":
+            st.markdown("---")
+            if st.button("📊 Relatórios Admin"):
+                from modules import report
+                report.run()
+                st.stop()
 
         # Espaço para empurrar o conteúdo para o final
         st.write("")  # Quebra de linha

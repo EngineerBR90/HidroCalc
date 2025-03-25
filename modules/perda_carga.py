@@ -1,6 +1,7 @@
 # modules/perda_carga.py
 import math
 import streamlit as st
+from tracking import track_access
 
 # Dicionário para conversão de diâmetro externo para interno (valores em mm)
 DIAMETROS = {
@@ -124,7 +125,7 @@ def interface_conexoes(label):
                 )
         return conexoes
 
-
+@track_access("perda_carga")
 def main():
     st.title("💧 Cálculo de Perda de Carga")
     st.markdown("""

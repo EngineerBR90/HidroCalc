@@ -1,5 +1,6 @@
 # filtragem.py
 import streamlit as st
+from tracking import track_access
 
 BANCO_FILTROS = [
     {
@@ -100,6 +101,7 @@ BANCO_FILTROS = [
     }
 ]
 
+@track_access("filtragem")  # ← Decorador aplicado
 def run():
     st.title("💧 Módulo Filtragem")
     st.markdown("---")

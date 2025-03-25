@@ -4,6 +4,7 @@ import math
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+from tracking import track_access
 
 BANCO_BOMBAS = [
     {
@@ -138,7 +139,7 @@ BANCO_BOMBAS = [
     }
 ]
 
-
+@track_access("hidromassagem")  # ← Decorador aplicado
 def run():
     st.title("💧 Módulo de Hidromassagem")
     st.markdown("---")

@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
+from tracking import track_access
 from io import StringIO
 import sys
 
@@ -273,7 +274,7 @@ def formatar_tabela_bombas():
     })
     return df
 
-
+@track_access("database_equipamentos")  # ← Decorador aplicado
 def run():
     st.title("Banco de Dados de Equipamentos")
 
