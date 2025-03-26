@@ -372,17 +372,14 @@ def run():
                 vazoes = np.array([p[0] for p in pontos_ordenados])
                 pressoes = np.array([p[1] for p in pontos_ordenados])
 
-                # Definir o grau do polinômio de ajuste de forma fixa (grau interativo EXCLUÍDO)
-                grau_polinomio = 2  # 1 = linear, 2 = quadrático, 3 = cúbico, etc.
-
                 try:
-                    # Ajuste polinomial: calcula os coeficientes para os dados
-                    coeficientes = np.polyfit(vazoes, pressoes, grau_polinomio)
-                    polinomio = np.poly1d(coeficientes)
+                    # Ajuste com PCHIP: cria interpolador que preserva a forma dos dados
+                    from scipy.interpolate import PchipInterpolator
+                    pchip = PchipInterpolator(vazoes, pressoes)
 
                     # Gerar pontos interpolados para a curva ajustada
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
-                    pressoes_interp = polinomio(vazoes_interp)
+                    pressoes_interp = pchip(vazoes_interp)
 
                     # NOVO CÓDIGO 1/3 - Cálculo da curva da instalação
                     # 'curva_instalacao' é uma função fornecida pelo usuário que retorna a pressão para uma dada vazão
@@ -395,7 +392,7 @@ def run():
                             # Gerar os pontos da curva de instalação para os mesmos valores de vazão interpolados
                             pressoes_sistema = [curva_instalacao(q) for q in vazoes_interp]
 
-                            # Encontrar os pontos de interseção entre a curva ajustada e a curva da instalação
+                            # Encontrar os pontos de interseção entre a curva ajustada (PCHIP) e a curva da instalação
                             diferenca = pressoes_interp - pressoes_sistema
                             cruzamentos = np.where(np.diff(np.sign(diferenca)))[0]
 
@@ -406,7 +403,7 @@ def run():
                                 y0, y1 = diferenca[idx], diferenca[idx + 1]
                                 raiz = x0 - y0 * (x1 - x0) / (y1 - y0)
                                 q_point = raiz
-                                h_point = polinomio(raiz)
+                                h_point = pchip(raiz)
 
                                 # Configurar anotações para exibir o ponto de operação
                                 anotacoes.append(dict(
@@ -444,12 +441,12 @@ def run():
                             line=dict(color='green', width=2, dash='dash')
                         ))
 
-                    # Adicionar a curva ajustada da motobomba (baseada no ajuste polinomial)
+                    # Adicionar a curva ajustada da motobomba (utilizando PCHIP)
                     fig.add_trace(go.Scatter(
                         x=vazoes_interp,
                         y=pressoes_interp,
                         mode='lines',
-                        name=f'Curva da Bomba (Grau {grau_polinomio})',
+                        name='Curva da Bomba (PCHIP)',
                         line=dict(color='blue', width=2)
                     ))
 
@@ -488,47 +485,31 @@ def run():
                         with col2:
                             st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
-                    # Exibir a equação do ajuste polinomial
-                    eq_text = "Equação do Ajuste:\n"
-                    for i, coef in enumerate(coeficientes):
-                        power = len(coeficientes) - i - 1
-                        eq_text += f"{coef:.3f}"
-                        if power > 0:
-                            eq_text += f"x^{power} + "
-                    st.code(eq_text.rstrip(' + '))
+                    # Exibir mensagem informativa sobre o método PCHIP
+                    st.info("Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite). Não há equação analítica única para esse método.")
 
                 except np.linalg.LinAlgError:
-                    st.error("Não foi possível calcular o ajuste. Reduza o grau do polinômio ou verifique os dados.")
+                    st.error("Não foi possível calcular o ajuste. Verifique os dados.")
                     # Fallback para interpolação linear
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
 
                     # Plotar versão simples com interpolação linear
                     fig = go.Figure()
-                    fig.add_trace(
-                        go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear')
-                    )
-                    fig.add_trace(
-                        go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais')
-                    )
+                    fig.add_trace(go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
+                    fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
                     st.plotly_chart(fig, use_container_width=True)
 
             else:
                 st.warning("Dados insuficientes para gerar a curva")
 
-                # Botão de download
-
-                st.download_button(
-
-                    label="Baixar Dados de Motobombas (CSV)",
-
-                    data=df_bombas.to_csv(index=False).encode('utf-8'),
-
-                    file_name='motobombas.csv',
-
-                    mime='text/csv'
-
-                )
+            # Botão de download dos dados
+            st.download_button(
+                label="Baixar Dados de Motobombas (CSV)",
+                data=df_bombas.to_csv(index=False).encode('utf-8'),
+                file_name='motobombas.csv',
+                mime='text/csv'
+            )
 
         st.markdown("""
 
