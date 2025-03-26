@@ -354,9 +354,12 @@ def run():
             )
 
             # Processamento dos dados para o gráfico
+
+            # Extrair os pontos (vazão, pressão) dos dados filtrados
             pontos = []
             for coluna in df_filtrado.columns[2:]:
                 if pd.notna(df_filtrado[coluna].iloc[0]):
+                    # Extrai a pressão a partir do nome da coluna (ex.: "2 mca")
                     pressao = float(coluna.split()[0])
                     vazao = df_filtrado[coluna].iloc[0]
                     pontos.append((vazao, pressao))
@@ -364,53 +367,48 @@ def run():
             if len(pontos) >= 2:
                 q_point = None
                 h_point = None
-                # Ordenar por vazão
+                # Ordenar os pontos com base na vazão (variável independente)
                 pontos_ordenados = sorted(pontos, key=lambda x: x[0])
                 vazoes = np.array([p[0] for p in pontos_ordenados])
                 pressoes = np.array([p[1] for p in pontos_ordenados])
 
-                # Selecionar grau do polinômio (ajustável)
-                grau_polinomio = st.slider(
-                    "Grau do Polinômio para Ajuste",
-                    min_value=1,
-                    max_value=10,
-                    value=2,
-                    help="Selecione a complexidade da curva (1 = linear, 2 = quadrática, 3 = cúbica)"
-                )
+                # Definir o grau do polinômio de ajuste de forma fixa (grau interativo EXCLUÍDO)
+                grau_polinomio = 2  # 1 = linear, 2 = quadrático, 3 = cúbico, etc.
 
                 try:
-                    # Ajuste polinomial
+                    # Ajuste polinomial: calcula os coeficientes para os dados
                     coeficientes = np.polyfit(vazoes, pressoes, grau_polinomio)
                     polinomio = np.poly1d(coeficientes)
 
-                    # Gerar pontos suaves
+                    # Gerar pontos interpolados para a curva ajustada
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = polinomio(vazoes_interp)
 
                     # NOVO CÓDIGO 1/3 - Cálculo da curva da instalação
+                    # 'curva_instalacao' é uma função fornecida pelo usuário que retorna a pressão para uma dada vazão
                     pressoes_sistema = []
                     anotacoes = []
                     shapes = []
 
                     if verificar_ponto and curva_instalacao:
                         try:
-                            # Gerar pontos da curva de instalação
+                            # Gerar os pontos da curva de instalação para os mesmos valores de vazão interpolados
                             pressoes_sistema = [curva_instalacao(q) for q in vazoes_interp]
 
-                            # Encontrar pontos de interseção
+                            # Encontrar os pontos de interseção entre a curva ajustada e a curva da instalação
                             diferenca = pressoes_interp - pressoes_sistema
                             cruzamentos = np.where(np.diff(np.sign(diferenca)))[0]
 
-                            # Processar cada cruzamento
+                            # Processar cada cruzamento encontrado
                             for idx in cruzamentos:
-                                # Interpolação linear para precisão
+                                # Interpolação linear entre dois pontos para maior precisão na interseção
                                 x0, x1 = vazoes_interp[idx], vazoes_interp[idx + 1]
                                 y0, y1 = diferenca[idx], diferenca[idx + 1]
                                 raiz = x0 - y0 * (x1 - x0) / (y1 - y0)
                                 q_point = raiz
                                 h_point = polinomio(raiz)
 
-                                # Configurar anotações
+                                # Configurar anotações para exibir o ponto de operação
                                 anotacoes.append(dict(
                                     x=q_point,
                                     y=h_point,
@@ -421,7 +419,7 @@ def run():
                                     ay=-40
                                 ))
 
-                                # Linhas auxiliares
+                                # Adicionar linhas auxiliares (shapes) para marcar o ponto de interseção
                                 shapes.append(dict(
                                     type="line",
                                     x0=q_point,
@@ -433,10 +431,10 @@ def run():
                         except Exception as e:
                             st.error(f"Erro na curva da instalação: {str(e)}")
 
-                    # Criar gráfico
+                    # NOVO CÓDIGO 2/3 - Criação do gráfico com Plotly
                     fig = go.Figure()
 
-                    # NOVO CÓDIGO 2/3 - Adicionar curva da instalação
+                    # Adicionar a curva da instalação, se disponível
                     if verificar_ponto and curva_instalacao:
                         fig.add_trace(go.Scatter(
                             x=vazoes_interp,
@@ -446,7 +444,7 @@ def run():
                             line=dict(color='green', width=2, dash='dash')
                         ))
 
-                    # Curva ajustada
+                    # Adicionar a curva ajustada da motobomba (baseada no ajuste polinomial)
                     fig.add_trace(go.Scatter(
                         x=vazoes_interp,
                         y=pressoes_interp,
@@ -455,7 +453,7 @@ def run():
                         line=dict(color='blue', width=2)
                     ))
 
-                    # Pontos originais
+                    # Adicionar os pontos originais (dados do fabricante)
                     fig.add_trace(go.Scatter(
                         x=vazoes,
                         y=pressoes,
@@ -464,7 +462,7 @@ def run():
                         marker=dict(color='red', size=8)
                     ))
 
-                    # NOVO CÓDIGO 3/3 - Adicionar anotações
+                    # NOVO CÓDIGO 3/3 - Adicionar anotações e linhas auxiliares, se houver interseção
                     if anotacoes:
                         fig.update_layout(
                             annotations=anotacoes,
@@ -481,7 +479,7 @@ def run():
 
                     st.plotly_chart(fig, use_container_width=True)
 
-                    # Exibir informações do ponto de operação
+                    # Exibir informações do ponto de operação, se encontrado
                     if anotacoes:
                         st.success("**Ponto de Operação Encontrado**")
                         col1, col2 = st.columns(2)
@@ -490,7 +488,7 @@ def run():
                         with col2:
                             st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
-                    # Exibir equação
+                    # Exibir a equação do ajuste polinomial
                     eq_text = "Equação do Ajuste:\n"
                     for i, coef in enumerate(coeficientes):
                         power = len(coeficientes) - i - 1
@@ -505,17 +503,17 @@ def run():
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
 
-                    # Plotar versão simples
+                    # Plotar versão simples com interpolação linear
                     fig = go.Figure()
                     fig.add_trace(
-                        go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
-                    fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
+                        go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear')
+                    )
+                    fig.add_trace(
+                        go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais')
+                    )
                     st.plotly_chart(fig, use_container_width=True)
 
-
-
             else:
-
                 st.warning("Dados insuficientes para gerar a curva")
 
                 # Botão de download
