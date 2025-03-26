@@ -10,7 +10,7 @@ import pandas as pd
 def run():
 
     # Seção 1: Dados Técnicos
-    with st.expander("Dados Técnicos e Constantes", expanded=True):
+    with st.expander("Dados Técnicos e Constantes", expanded=False):
         st.subheader("Propriedades do PVC")
         cols = st.columns(2)
         with cols[0]:
@@ -65,7 +65,7 @@ def run():
             """)
 
     # Seção 2: Equações Principais
-    with st.expander("Equações Fundamentais", expanded=True):
+    with st.expander("Equações Fundamentais", expanded=False):
         tab1, tab2, tab3 = st.tabs(["Darcy-Weisbach", "Hazen-Williams", "Reynolds"])
 
         with tab1:
@@ -161,7 +161,7 @@ def run():
         """)
 
     # Seção 4: Fluxograma de cálculo - Módulo Perda de Carga
-    with st.expander("Fluxograma de Cálculo", expanded=True):
+    with st.expander("Fluxograma de Cálculo", expanded=False):
         st.markdown("""
         ### **Fluxo de Cálculo da Perda de Carga**        
         """)
@@ -192,7 +192,7 @@ def run():
 
                 **2.3 Número de Reynolds**  
                 $$
-                Re = \frac{V\,D_{int}}{1.004\times10^{-6}}
+                Re = \frac{V\,D_{int}}{0.896\times10^{-6}}
                 $$
                 """)
 
@@ -252,7 +252,7 @@ def run():
         """)
 
     # Seção 5: Ajuste de Curva PCHIP
-    with st.expander("Ajuste de Curva PCHIP", expanded=True):
+    with st.expander("Ajuste de Curva PCHIP"):
         st.markdown("""
         ### **Ajuste de Curva PCHIP (Piecewise Cubic Hermite Interpolating Polynomial)**
         
