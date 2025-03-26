@@ -373,7 +373,7 @@ def run():
                 grau_polinomio = st.slider(
                     "Grau do Polinômio para Ajuste",
                     min_value=1,
-                    max_value=3,
+                    max_value=10,
                     value=2,
                     help="Selecione a complexidade da curva (1 = linear, 2 = quadrática, 3 = cúbica)"
                 )
