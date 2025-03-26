@@ -4,10 +4,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 from tracking import track_access
 from io import StringIO
-from scipy.interpolate import PchipInterpolator
+import sys
 
 BANCO_FILTROS = [
     {
@@ -406,58 +405,26 @@ def run():
                                 q_point = raiz
                                 h_point = pchip(raiz)
 
-                                # Linha vertical (eixo Q)
+                                # Configurar anotações para exibir o ponto de operação
+                                anotacoes.append(dict(
+                                    x=q_point,
+                                    y=h_point,
+                                    text=f"Ponto de Operação<br>Q: {q_point:.1f} m³/h<br>H: {h_point:.1f} mca",
+                                    showarrow=True,
+                                    arrowhead=3,
+                                    ax=20,
+                                    ay=-40
+                                ))
+
+                                # Adicionar linhas auxiliares (shapes) para marcar o ponto de interseção
                                 shapes.append(dict(
                                     type="line",
                                     x0=q_point,
                                     y0=0,
                                     x1=q_point,
                                     y1=h_point,
-                                    line=dict(color="#2B5876", dash="dot", width=1)
+                                    line=dict(color="#666666", dash="dot", width=1)
                                 ))
-
-                                # Linha horizontal (eixo H)
-                                shapes.append(dict(
-                                    type="line",
-                                    x0=0,
-                                    y0=h_point,
-                                    x1=q_point,
-                                    y1=h_point,
-                                    line=dict(color="#2B5876", dash="dot", width=1)
-                                ))
-
-                                # Anotações nos eixos
-                                anotacoes.extend([
-                                    dict(
-                                        x=q_point,
-                                        y=0,
-                                        text=f"← Q: {q_point:.1f} m³/h",
-                                        showarrow=False,
-                                        yanchor="top",
-                                        yshift=-25,
-                                        font=dict(color="#2B5876")
-                                    ),
-                                    dict(
-                                        x=0,
-                                        y=h_point,
-                                        text=f"H: {h_point:.1f} mca ↓",
-                                        showarrow=False,
-                                        xanchor="right",
-                                        xshift=-40,
-                                        font=dict(color="#2B5876")
-                                    ),
-                                    dict(
-                                        x=q_point,
-                                        y=h_point,
-                                        text=f"Ponto de Operação<br>Q: {q_point:.1f} m³/h<br>H: {h_point:.1f} mca",
-                                        showarrow=True,
-                                        arrowhead=3,
-                                        ax=20,
-                                        ay=-40,
-                                        bgcolor="#FFFFFF",
-                                        bordercolor="#2B5876"
-                                    )
-                                ])
                         except Exception as e:
                             st.error(f"Erro na curva da instalação: {str(e)}")
 
