@@ -234,7 +234,6 @@ def run():
 
                         # Criar gráfico com Plotly
                         if pressoes and vazoes:
-                            # --- NOVO CÓDIGO A PARTIR DAQUI ---
                             try:
                                 # Converte para arrays numpy e ordena
                                 x = np.array(vazoes)
@@ -243,27 +242,25 @@ def run():
                                 x_sorted = x[sort_idx]
                                 y_sorted = y[sort_idx]
 
-                                # Cria interpolação polinomial de 3º grau
-                                coeffs = np.polyfit(x_sorted, y_sorted, 3)
-                                poly = np.poly1d(coeffs)
-
-                                # Gera pontos suaves
+                                # Criar interpolação PCHIP
+                                from scipy.interpolate import PchipInterpolator
+                                pchip = PchipInterpolator(x_sorted, y_sorted)
                                 x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
-                                y_smooth = poly(x_smooth)
+                                y_smooth = pchip(x_smooth)
 
-                                # Cria figura
+                                # Criar figura com Plotly
                                 fig = go.Figure()
 
-                                # Curva suave
+                                # Adicionar curva ajustada (suave)
                                 fig.add_trace(go.Scatter(
                                     x=x_smooth,
                                     y=y_smooth,
                                     mode='lines',
-                                    name='Curva Interpolada',
+                                    name='Curva Ajustada (PCHIP)',
                                     line=dict(color='#1f77b4', width=3)
                                 ))
 
-                                # Pontos originais
+                                # Adicionar os pontos originais dos dados
                                 fig.add_trace(go.Scatter(
                                     x=x_sorted,
                                     y=y_sorted,
@@ -284,10 +281,9 @@ def run():
 
                             except Exception as e:
                                 st.error(f"Erro ao gerar curva: {str(e)}")
-                            # --- FIM DO NOVO CÓDIGO ---
-
                         else:
                             st.warning("Dados insuficientes para plotar a curva")
+
                 else:
                     st.warning("""
                     **Recomendações:**
