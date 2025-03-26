@@ -9,7 +9,6 @@ import pandas as pd
 @track_access("memoria")
 def run():
 
-
     # Seção 1: Dados Técnicos
     with st.expander("Dados Técnicos e Constantes", expanded=True):
         st.subheader("Propriedades do PVC")
@@ -78,9 +77,13 @@ def run():
 
             **Fator de Atrito (f):**
             - Laminar (Re < 2000):  
-            $$ f = \\frac{64}{Re} $$
+            $$
+            f = \\frac{64}{Re}
+            $$
             - Turbulento (Colebrook-White):  
-            $$ \\frac{1}{\\sqrt{f}} = -2\\log\\left(\\frac{\\epsilon}{3.7D} + \\frac{2.51}{Re\\sqrt{f}}\\right) $$
+            $$
+            \\frac{1}{\\sqrt{f}} = -2\\log\\left(\\frac{\\varepsilon}{3.7D} + \\frac{2.51}{Re\\sqrt{f}}\\right)
+            $$
             """)
 
         with tab2:
@@ -105,7 +108,7 @@ def run():
             st.markdown("""
             **Número de Reynolds:**
             $$
-            Re = \\frac{VD}{\\nu}
+            Re = \\frac{V\\,D}{\\nu}
             $$
 
             **Classificação:**
@@ -248,7 +251,68 @@ def run():
         ```
         """)
 
-    # Seção 5: Referências
+    # Seção 5: Ajuste de Curva PCHIP
+    with st.expander("Ajuste de Curva PCHIP", expanded=True):
+        st.markdown("""
+        ### **Ajuste de Curva PCHIP (Piecewise Cubic Hermite Interpolating Polynomial)**
+        
+        O **PCHIP** é um método de interpolação que utiliza polinômios cúbicos definidos por partes para estimar valores entre pontos de dados, mantendo a monotonicidade e evitando oscilações indesejadas (overshoots). Esse método é muito utilizado quando se deseja uma curva suave que preserve a forma dos dados originais, sem criar picos artificiais.
+
+        #### **Formulação Matemática**
+
+        Considere um conjunto de pontos $(x_i, y_i)$, para $i = 0, 1, \\dots, n$. Para cada intervalo $[x_i, x_{i+1}]$, o polinômio interpolador é definido como:
+
+        $$
+        p_i(x) = h_{00}(t) \\; y_i + h_{10}(t) \\; (x_{i+1}-x_i) \\; m_i + h_{01}(t) \\; y_{i+1} + h_{11}(t) \\; (x_{i+1}-x_i) \\; m_{i+1},
+        $$
+
+        onde:
+        
+        - $t = \\dfrac{x - x_i}{x_{i+1} - x_i}$ é a variável adimensional (sem unidade), pois:
+          - $x$ e $x_i$ estão na mesma unidade, normalmente metros ([m]) no padrão SI.
+        - $y_i$ e $y_{i+1}$ são os valores da função nos pontos, com unidade que depende do contexto (por exemplo, [m³/s] se estivermos trabalhando com vazões).
+        - $m_i$ e $m_{i+1}$ são as derivadas (inclinacões) nos pontos $x_i$ e $x_{i+1}$, com unidade de $\\dfrac{[y]}{[m]}$, isto é, a unidade de $y$ por metro.
+
+        #### **Funções de Base de Hermite**
+
+        As funções de base são definidas por:
+        
+        $$
+        h_{00}(t) = 2t^3 - 3t^2 + 1,
+        $$
+        $$
+        h_{10}(t) = t^3 - 2t^2 + t,
+        $$
+        $$
+        h_{01}(t) = -2t^3 + 3t^2,
+        $$
+        $$
+        h_{11}(t) = t^3 - t^2.
+        $$
+
+        #### **Resumo dos Termos e Unidades**
+
+        - **$x$, $x_i$, $x_{i+1}$:** Variável independente (por exemplo, posição), unidade: metro ([m]).
+        - **$y_i$, $y_{i+1}$:** Valores da função (por exemplo, vazão, pressão etc.), unidade: conforme o contexto (ex.: [m³/s], [mca], etc.).
+        - **$m_i$, $m_{i+1}$:** Derivadas de $y$ em relação a $x$, unidade: unidade de $y$ por metro (ex.: [m³/s]/[m], [mca]/[m]).
+        - **$t$:** Variável adimensional, sem unidade.
+        - **$p_i(x)$:** Valor interpolado para $x$ no intervalo $[x_i, x_{i+1}]$, com mesma unidade de $y$.
+
+        #### **Aplicação em Curvas Características de Motobombas**
+
+        No contexto de motobombas hidráulicas, o PCHIP pode ser utilizado para interpolar curvas características (por exemplo, a relação entre vazão e pressão) de forma a preservar a forma real dos dados experimentais. Essa técnica permite estimar o desempenho da bomba em pontos intermediários sem introduzir comportamentos não físicos.
+
+        Em resumo, o ajuste de curva PCHIP proporciona:
+        - **Suavidade**: uma curva contínua e diferenciável entre os pontos.
+        - **Preservação da forma**: evita oscilações artificiais e mantém a monotonicidade dos dados.
+        - **Precisão**: gera valores interpolados fiéis aos dados medidos, úteis para análise e simulação de desempenho.
+
+        **Referências:**
+        - F. N. Fritsch e R. E. Carlson, "Monotone Piecewise Cubic Interpolation," SIAM Journal on Numerical Analysis, 1980.
+        - Documentação de bibliotecas científicas (por exemplo, SciPy) que implementam o método PCHIP.
+        """)
+
+    # Seção 6: Referências
     with st.expander("Bibliografia Recomendada"):
         st.markdown("""
         1. **Mecânica dos Fluidos** - R. C. Hibbeler  
