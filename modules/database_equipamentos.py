@@ -486,7 +486,7 @@ def run():
                             st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
                     # Exibir mensagem informativa sobre o método PCHIP
-                    st.info("Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite). Não há equação analítica única para esse método.")
+                    st.info("Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite), mais detalhes em Memória de cálculo.")
 
                 except np.linalg.LinAlgError:
                     st.error("Não foi possível calcular o ajuste. Verifique os dados.")
