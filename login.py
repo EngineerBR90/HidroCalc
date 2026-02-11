@@ -37,7 +37,7 @@ def login():
             st.session_state["authenticated"] = True
             st.session_state["username"] = username
             st.success(f"Bem-vindo, {username.capitalize()}!")
-            st.experimental_set_query_params(page="main")  # Atualiza a URL
+            st.set_query_params(page="main")  # Atualiza a URL
             st.rerun()  # Atualiza a tela para carregar o main_app.py
         else:
             st.error("Usuário ou senha incorretos!")
