@@ -3,15 +3,22 @@ import pandas as pd
 import numpy as npe
 import bcrypt
 from tracking import track_access
-from modules import filtragem, transbordo, hidromassagem, perda_carga, memoria, database_equipamentos
+from modules import (
+    filtragem,
+    transbordo,
+    hidromassagem,
+    perda_carga,
+    memoria,
+    database_equipamentos
+)
 
 # Verifica se o usuário está autenticado
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
     st.warning("🔒 Você precisa fazer login para acessar o aplicativo.")
     if st.button("Ir para a tela de login"):
-        import login  # Certifique-se de que login.py está na raiz do projeto
-        login.login()  # Chama a função de login para exibir a tela de autenticação
-    st.stop()  # Interrompe a execução do main_app.py
+        import login
+        login.login()
+    st.stop()
 
 
 def main():
@@ -23,10 +30,22 @@ def main():
 
     # Sidebar Navigation
     with st.sidebar:
-        # Título e navegação no topo da sidebar
         st.title("Navegação")
-        page = st.radio("Selecione o módulo:",
-                        ["Menu Principal", "Filtragem", "Transbordo", "Hidromassagem", "Cascatas", "Aquecimento", "Perda de carga", "Memória de cálculo", "Database equipamentos"])
+
+        page = st.radio(
+            "Selecione o módulo:",
+            [
+                "Menu Principal",
+                "Filtragem",
+                "Transbordo",
+                "Hidromassagem",
+                "Cascatas",
+                "Aquecimento",
+                "Perda de carga",
+                "Memória de cálculo",
+                "Database equipamentos"
+            ]
+        )
 
         if st.session_state.get("username") == "kiara":
             st.markdown("---")
@@ -35,35 +54,33 @@ def main():
                 report.run()
                 st.stop()
 
-        # Espaço para empurrar o conteúdo para o final
-        st.write("")  # Quebra de linha
-        st.write("")  # Quebra de linha
-        st.write("")  # Você pode repetir para ajustar o espaçamento ou usar CSS
+        st.write("")
+        st.write("")
+        st.write("")
 
-        # Insere um CSS customizado para posicionar o container fixado na parte inferior
         st.markdown(
             """
             <style>
             .bottom-div {
                 position: fixed;
                 bottom: 0;
-                width: 14.5rem;  /* Ajuste para caber na sidebar; pode ser necessário ajustar conforme o tamanho da sidebar */
+                width: 14.5rem;
                 text-align: center;
                 padding: 10px 0;
                 background: #f0f2f6;
             }
             </style>
-            """, unsafe_allow_html=True
+            """,
+            unsafe_allow_html=True
         )
 
-        # Container fixado na parte inferior da sidebar
         st.markdown('<div class="bottom-div">', unsafe_allow_html=True)
         st.write(f"Login: {st.session_state['username'].capitalize()}")
+
         if st.button("Logout"):
-            del st.session_state["authenticated"]
-            del st.session_state["username"]
-            st.experimental_set_query_params(page="login")
+            st.session_state.clear()
             st.rerun()
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Page Routing
@@ -110,11 +127,9 @@ def show_home():
 
     **Módulos em desenvolvimento:**
     - Cascatas 
-    - Aquecimento por trocador de calor elétrico (engenharia reversa da PLANILHA DE DIMENSIONAMENTO SODRAMAR)
-    - Verificação de suscetibilidade à cavitação (desenvolvimento impossibilitado por falta de info NPSHr do fornecedor Sodramar)
+    - Aquecimento por trocador de calor elétrico
+    - Verificação de suscetibilidade à cavitação
     """)
-
-    # st.image("assets/logo_fx2.png", use_container_width=True)
 
 
 def run():
