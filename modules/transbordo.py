@@ -3,144 +3,20 @@ import math
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+from typing import Optional, Dict, Any, List
 from tracking import track_access
-
-# noinspection PyInterpreter
-BANCO_BOMBAS = [
-    {
-        "modelo": "BMC-25",
-        "potencia_cv": 0.25,
-        "vazao_2_mca": 12.14,
-        "vazao_4_mca": 11.47,
-        "vazao_6_mca": 9.02,
-        "vazao_8_mca": 7.28,
-        "vazao_10_mca": None,
-        "vazao_12_mca": None,
-        "vazao_14_mca": None,
-        "vazao_16_mca": None,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMC-33",
-        "potencia_cv": 0.33,
-        "vazao_2_mca": None,
-        "vazao_4_mca": 11.91,
-        "vazao_6_mca": 9.44,
-        "vazao_8_mca": 7.43,
-        "vazao_10_mca": None,
-        "vazao_12_mca": None,
-        "vazao_14_mca": None,
-        "vazao_16_mca": None,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMC-50",
-        "potencia_cv": 0.5,
-        "vazao_2_mca": None,
-        "vazao_4_mca": 12.77,
-        "vazao_6_mca": 10.12,
-        "vazao_8_mca": 8.03,
-        "vazao_10_mca": 5.23,
-        "vazao_12_mca": None,
-        "vazao_14_mca": None,
-        "vazao_16_mca": None,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMC-75",
-        "potencia_cv": 0.75,
-        "vazao_2_mca": None,
-        "vazao_4_mca": 16.26,
-        "vazao_6_mca": 13.75,
-        "vazao_8_mca": 12.24,
-        "vazao_10_mca": 10.28,
-        "vazao_12_mca": None,
-        "vazao_14_mca": None,
-        "vazao_16_mca": None,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMC-100",
-        "potencia_cv": 1.0,
-        "vazao_2_mca": None,
-        "vazao_4_mca": 19.88,
-        "vazao_6_mca": 19.38,
-        "vazao_8_mca": 16.71,
-        "vazao_10_mca": 14.83,
-        "vazao_12_mca": 13.25,
-        "vazao_14_mca": 5.75,
-        "vazao_16_mca": None,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMC-150",
-        "potencia_cv": 1.5,
-        "vazao_2_mca": None,
-        "vazao_4_mca": None,
-        "vazao_6_mca": 26.79,
-        "vazao_8_mca": 23.14,
-        "vazao_10_mca": 22.77,
-        "vazao_12_mca": 21.95,
-        "vazao_14_mca": 18.63,
-        "vazao_16_mca": 12.38,
-        "vazao_18_mca": 4.46
-    },
-    {
-        "modelo": "BMC-200",
-        "potencia_cv": 2.0,
-        "vazao_2_mca": None,
-        "vazao_4_mca": None,
-        "vazao_6_mca": 28.24,
-        "vazao_8_mca": 27.11,
-        "vazao_10_mca": 24.35,
-        "vazao_12_mca": 20.94,
-        "vazao_14_mca": 19.19,
-        "vazao_16_mca": 15.92,
-        "vazao_18_mca": 3.6
-    },
-       {
-        "modelo": "BMU-200",
-        "potencia_cv": 2.0,
-        "vazao_2_mca": None,
-        "vazao_4_mca": None,
-        "vazao_6_mca": 40.0,
-        "vazao_8_mca": 38.27,
-        "vazao_10_mca": 36.55,
-        "vazao_12_mca": 34.82,
-        "vazao_14_mca": 31.36,
-        "vazao_16_mca": 27.64,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMU-300",
-        "potencia_cv": 3.0,
-        "vazao_2_mca": None,
-        "vazao_4_mca": None,
-        "vazao_6_mca": 44.4,
-        "vazao_8_mca": 42.26,
-        "vazao_10_mca": 40.16,
-        "vazao_12_mca": 38.2,
-        "vazao_14_mca": 36.6,
-        "vazao_16_mca": 34.31,
-        "vazao_18_mca": None
-    },
-    {
-        "modelo": "BMU-400",
-        "potencia_cv": 4.0,
-        "vazao_2_mca": None,
-        "vazao_4_mca": None,
-        "vazao_6_mca": 54.0,
-        "vazao_8_mca": 50.4,
-        "vazao_10_mca": 46.8,
-        "vazao_12_mca": 43.2,
-        "vazao_14_mca": 38.4,
-        "vazao_16_mca": 35.6,
-        "vazao_18_mca": None
-    }
-]
+from modules.data import BANCO_BOMBAS
+from modules.calc_utils import ajustar_curva_pchip
 
 @track_access("transbordo")
-def run():
+def run() -> None:
+    """
+    Executa o módulo de dimensionamento de transbordo (borda infinita).
+    
+    Calcula a vazão necessária para o efeito de borda infinita, volume do cocho,
+    e seleciona a motobomba adequada baseada na pressão selecionada.
+    Exibe resultados e curva característica da bomba.
+    """
     st.title("💧 Módulo Transbordo")
     st.markdown("---")
     
@@ -150,20 +26,20 @@ def run():
         
         with col1:
             # Inputs do usuário
-            altura_lamina_mm = st.number_input(
+            altura_lamina_mm: float = st.number_input(
                 "Altura da lâmina (mm)",
                 min_value=1.0,
                 step=0.5,
                 format="%.1f"
 
             )
-            comprimento_borda_m = st.number_input(
+            comprimento_borda_m: float = st.number_input(
                 "Comprimento total da borda infinita (m)",
                 min_value=1.0,
                 step=1.0,
                 format="%.1f"
             )
-            area_piscina_m2 = st.number_input(
+            area_piscina_m2: float = st.number_input(
                 "Área da piscina (m²)",
                 min_value=1.0,
                 step=1.0,
@@ -172,8 +48,8 @@ def run():
             
         with col2:
             # Seleção de pressão
-            possible_pressures = sorted({2,4,6,8,10,12,14,16,18})
-            pressao_mca = st.selectbox(
+            possible_pressures: List[int] = sorted({2,4,6,8,10,12,14,16,18})
+            pressao_mca: int = st.selectbox(
                 "Pressão dimensionada (m.c.a)",
                 options=possible_pressures,
                 index=2  # Valor padrão 6 m.c.a
@@ -183,12 +59,12 @@ def run():
     if st.button("Calcular", type="primary"):
         with st.spinner("Calculando..."):
             # Realiza cálculos
-            volume_cocho_litros = area_piscina_m2 * (altura_lamina_mm / 1000) * 3 * 1000
-            area_lamina_m2 = (altura_lamina_mm / 1000) * comprimento_borda_m
-            vazao_necessaria = (1608 * (altura_lamina_mm / 1000) * comprimento_borda_m) * math.sqrt(2 * 9.81 * (altura_lamina_mm / 1000))
+            volume_cocho_litros: float = area_piscina_m2 * (altura_lamina_mm / 1000) * 3 * 1000
+            area_lamina_m2: float = (altura_lamina_mm / 1000) * comprimento_borda_m
+            vazao_necessaria: float = (1608 * (altura_lamina_mm / 1000) * comprimento_borda_m) * math.sqrt(2 * 9.81 * (altura_lamina_mm / 1000))
             
             # Seleção da bomba
-            selected_pump = None
+            selected_pump: Optional[Dict[str, Any]] = None
             for bomba in BANCO_BOMBAS:
                 key = f"vazao_{pressao_mca}_mca"
                 vazao_pump = bomba.get(key)
@@ -224,8 +100,8 @@ def run():
 
                         st.write("**Curva da Motobomba:**")
                         # Preparar dados para o gráfico
-                        pressoes = []
-                        vazoes = []
+                        pressoes: List[int] = []
+                        vazoes: List[float] = []
                         for press in possible_pressures:
                             key = f'vazao_{press}_mca'
                             if selected_pump.get(key) is not None:
@@ -243,10 +119,7 @@ def run():
                                 y_sorted = y[sort_idx]
 
                                 # Criar interpolação PCHIP
-                                from scipy.interpolate import PchipInterpolator
-                                pchip = PchipInterpolator(x_sorted, y_sorted)
-                                x_smooth = np.linspace(min(x_sorted), max(x_sorted), 100)
-                                y_smooth = pchip(x_smooth)
+                                x_smooth, y_smooth, _ = ajustar_curva_pchip(x_sorted, y_sorted)
 
                                 # Criar figura com Plotly
                                 fig = go.Figure()
