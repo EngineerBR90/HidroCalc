@@ -7,7 +7,7 @@ from typing import List, Tuple, Optional, Any, Callable
 from tracking import track_access
 from io import StringIO
 import sys
-from modules.data import BANCO_FILTROS, BANCO_BOMBAS
+from modules.data import BANCO_FILTROS, BANCO_BOMBAS, BANCO_BOMBAS_TT
 from modules.calc_utils import ajustar_curva_pchip, encontrar_interseccao_curvas
 
 
@@ -43,7 +43,7 @@ def formatar_tabela_bombas() -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame formatado.
     """
-    df = pd.DataFrame(BANCO_BOMBAS)
+    df = pd.DataFrame(BANCO_BOMBAS_TT)
     # Reformata colunas de vazão
     df = df.melt(id_vars=["modelo", "potencia_cv"],
                  var_name="Carga",

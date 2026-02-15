@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import numpy as npe
+import numpy as np          # corrigido
 import bcrypt
 from tracking import track_access
 from modules import (
@@ -12,26 +12,26 @@ from modules import (
     database_equipamentos
 )
 
-# Verifica se o usuário está autenticado
-if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-    st.warning("🔒 Você precisa fazer login para acessar o aplicativo.")
-    if st.button("Ir para a tela de login"):
-        import login
-        login.login()
-    st.stop()
-
-
 def main():
+    # 1️⃣ Primeiro comando Streamlit: configuração da página
     st.set_page_config(
         page_title="💧 HidroCalc Piscinas",
         layout="wide",
         initial_sidebar_state="expanded"
     )
 
+    # 2️⃣ Verificação de autenticação (agora após a configuração)
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔒 Você precisa fazer login para acessar o aplicativo.")
+        if st.button("Ir para a tela de login"):
+            import login
+            login.login()
+        st.stop()
+        return
+
     # Sidebar Navigation
     with st.sidebar:
         st.title("Navegação")
-
         page = st.radio(
             "Selecione o módulo:",
             [
@@ -111,7 +111,6 @@ def main():
     elif st.session_state.current_page == "Database equipamentos":
         database_equipamentos.run()
 
-
 def show_home():
     st.title("💧 HidroCalc Piscinas")
     st.markdown("""
@@ -131,10 +130,8 @@ def show_home():
     - Verificação de suscetibilidade à cavitação
     """)
 
-
 def run():
     main()
-
 
 if __name__ == "__main__":
     run()

@@ -14,7 +14,7 @@ def run() -> None:
     Executa o módulo de dimensionamento de transbordo (borda infinita).
     
     Calcula a vazão necessária para o efeito de borda infinita, volume do cocho,
-    e seleciona a motobomba adequada baseada na pressão selecionada.
+    e selecio   na a motobomba adequada baseada na pressão selecionada.
     Exibe resultados e curva característica da bomba.
     """
     st.title("💧 Módulo Transbordo")

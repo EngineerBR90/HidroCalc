@@ -2,8 +2,6 @@
 import streamlit as st
 from tracking import track_access
 
-st.set_page_config(page_title="Memória Cálculo", layout="wide")
-
 import pandas as pd
 
 @track_access("memoria")

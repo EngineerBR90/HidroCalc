@@ -1,17 +1,17 @@
-# modules/data.py
-
 """
-Central Repository for Application Data and Constants.
+Repositório Central de Dados e Constantes da Aplicação.
 
-This module contains:
-- Physical constants (water properties, gravity)
-- Equipment databases (Filters, Pumps)
-- Pipe specifications (Diameters, Friction factors)
+Este módulo contém:
+
+- Constantes físicas (propriedades da água, gravidade)
+- Bases de dados de equipamentos (Filtros, Bombas)
+- Especificações de tubulação (Diâmetros, Fatores de atrito)
 """
 
 # ==========================================
 # CONSTANTES FÍSICAS
 # ==========================================
+
 GRAVIDADE = 9.81  # m/s²
 VISCOSIDADE_AGUA_24C = 0.896e-6  # m²/s
 RUGOSIDADE_PVC = 0.0000015  # m
@@ -19,6 +19,7 @@ RUGOSIDADE_PVC = 0.0000015  # m
 # ==========================================
 # DADOS DE TUBULAÇÃO (PVC)
 # ==========================================
+
 # Diâmetro Externo (mm) -> Diâmetro Interno (mm)
 DIAMETROS_TUBULACAO = {
     25: 21.6,
@@ -161,7 +162,10 @@ BANCO_FILTROS = [
     }
 ]
 
-BANCO_BOMBAS = [
+# ==========================================
+# BOMBAS – Linha BMC (monobloco)
+# ==========================================
+BANCO_BOMBAS_BMC = [
     {
         "modelo": "BMC-25",
         "potencia_cv": 0.25,
@@ -252,7 +256,13 @@ BANCO_BOMBAS = [
         "vazao_14_mca": 19.19,
         "vazao_16_mca": 15.92,
         "vazao_18_mca": 3.6
-    },
+    }
+]
+
+# ==========================================
+# BOMBAS – Linha BMU (ultra)
+# ==========================================
+BANCO_BOMBAS_BMU = [
     {
         "modelo": "BMU-200",
         "potencia_cv": 2.0,
@@ -293,3 +303,191 @@ BANCO_BOMBAS = [
         "vazao_18_mca": None
     }
 ]
+
+# ==========================================
+# BOMBAS – Linha BM (linha padrão)
+# ==========================================
+BANCO_BOMBAS_BM = [
+    {
+        "modelo": "BM-25",
+        "potencia_cv": 0.25,
+        "vazao_2_mca": 11.89,
+        "vazao_4_mca": 11.24,
+        "vazao_6_mca": 8.83,
+        "vazao_8_mca": 7.13,
+        "vazao_10_mca": None,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BM-33",
+        "potencia_cv": 0.33,
+        "vazao_2_mca": 12.07,
+        "vazao_4_mca": 11.67,
+        "vazao_6_mca": 9.95,
+        "vazao_8_mca": 7.28,
+        "vazao_10_mca": None,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BM-50",
+        "potencia_cv": 0.5,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 12.51,
+        "vazao_6_mca": 9.91,
+        "vazao_8_mca": 7.86,
+        "vazao_10_mca": 5.12,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BM-75",
+        "potencia_cv": 0.75,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 15.93,
+        "vazao_6_mca": 13.97,
+        "vazao_8_mca": 11.99,
+        "vazao_10_mca": 10.1,
+        "vazao_12_mca": 6.9,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BM-100",
+        "potencia_cv": 1.0,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 19.48,
+        "vazao_6_mca": 19.43,
+        "vazao_8_mca": 16.37,
+        "vazao_10_mca": 14.5,
+        "vazao_12_mca": 13.0,
+        "vazao_14_mca": 5.63,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BM-150",
+        "potencia_cv": 1.5,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 28.22,
+        "vazao_6_mca": 26.25,
+        "vazao_8_mca": 22.67,
+        "vazao_10_mca": 22.3,
+        "vazao_12_mca": 21.5,
+        "vazao_14_mca": 18.3,
+        "vazao_16_mca": 12.1,
+        "vazao_18_mca": 4.4
+    },
+    {
+        "modelo": "BM-200",
+        "potencia_cv": 2.0,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 31.17,
+        "vazao_6_mca": 29.1,
+        "vazao_8_mca": 28.24,
+        "vazao_10_mca": 24.9,
+        "vazao_12_mca": 20.9,
+        "vazao_14_mca": 19.2,
+        "vazao_16_mca": 15.9,
+        "vazao_18_mca": 3.6
+    },
+    {
+        "modelo": "BM-300",
+        "potencia_cv": 3.0,
+        "vazao_2_mca": None,
+        "vazao_4_mca": None,
+        "vazao_6_mca": 34.1,
+        "vazao_8_mca": 32.14,
+        "vazao_10_mca": 31.3,
+        "vazao_12_mca": 29.8,
+        "vazao_14_mca": 27.4,
+        "vazao_16_mca": 20.6,
+        "vazao_18_mca": 6.9
+    }
+]
+
+# ==========================================
+# BOMBAS – Linha BMGC (linha com maior pressão)
+# ==========================================
+BANCO_BOMBAS_BMGC = [
+    {
+        "modelo": "BMGC-25",
+        "potencia_cv": 0.25,
+        "vazao_2_mca": 11.9,
+        "vazao_4_mca": 11.2,
+        "vazao_6_mca": 8.8,
+        "vazao_8_mca": 7.1,
+        "vazao_10_mca": None,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BMGC-33",
+        "potencia_cv": 0.33,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 12.0,
+        "vazao_6_mca": 9.2,
+        "vazao_8_mca": 7.2,
+        "vazao_10_mca": None,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BMGC-50",
+        "potencia_cv": 0.5,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 12.5,
+        "vazao_6_mca": 9.9,
+        "vazao_8_mca": 7.8,
+        "vazao_10_mca": 5.1,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BMGC-75",
+        "potencia_cv": 0.75,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 15.9,
+        "vazao_6_mca": 13.4,
+        "vazao_8_mca": 11.9,
+        "vazao_10_mca": 10.0,
+        "vazao_12_mca": 6.9,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "BMGC-100",
+        "potencia_cv": 1.0,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 19.4,
+        "vazao_6_mca": 18.4,
+        "vazao_8_mca": 16.3,
+        "vazao_10_mca": 14.5,
+        "vazao_12_mca": 12.9,
+        "vazao_14_mca": 5.6,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    }
+]
+
+
+# ==========================================
+# BOMBAS – Lista combinada (para compatibilidade)
+# ==========================================
+BANCO_BOMBAS = BANCO_BOMBAS_BMC + BANCO_BOMBAS_BMU
+BANCO_BOMBAS_TT = BANCO_BOMBAS_BMC + BANCO_BOMBAS_BMU + BANCO_BOMBAS_BM + BANCO_BOMBAS_BMGC
