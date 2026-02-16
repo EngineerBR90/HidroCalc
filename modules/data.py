@@ -163,7 +163,7 @@ BANCO_FILTROS = [
 ]
 
 # ==========================================
-# BOMBAS – Linha BMC (monobloco)
+# BOMBAS – Linha BMC (linha padrão com motor importado)
 # ==========================================
 BANCO_BOMBAS_BMC = [
     {
@@ -305,7 +305,7 @@ BANCO_BOMBAS_BMU = [
 ]
 
 # ==========================================
-# BOMBAS – Linha BM (linha padrão)
+# BOMBAS – Linha BM (linha padrão com motor WEG)
 # ==========================================
 BANCO_BOMBAS_BM = [
     {
@@ -415,9 +415,10 @@ BANCO_BOMBAS_BM = [
 ]
 
 # ==========================================
-# BOMBAS – Linha BMGC (linha com maior pressão)
+# BOMBAS – Linha BMGC (linha para piscina com gerador de cloro)
 # ==========================================
 BANCO_BOMBAS_BMGC = [
+
     {
         "modelo": "BMGC-25",
         "potencia_cv": 0.25,
@@ -485,9 +486,264 @@ BANCO_BOMBAS_BMGC = [
     }
 ]
 
+# ==========================================
+# BOMBAS – Jacuzzi com pré filtro
+# ==========================================
+BANCO_BOMBAS_JACUZZI = [
+
+    {
+        "modelo": "25A-M/T",
+        "potencia_cv": 0.25,
+        "vazao_6_mca": 8.8,
+        "vazao_8_mca": 6.5,
+        "vazao_10_mca": 2.6,
+        "vazao_12_mca": 2.4,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "3A-M/T",
+        "potencia_cv": 0.33,
+        "vazao_6_mca": 9.1,
+        "vazao_8_mca": 7.5,
+        "vazao_10_mca": 5.5,
+        "vazao_12_mca": 6.2,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "5A-M/T",
+        "potencia_cv": 0.5,
+        "vazao_6_mca": None,
+        "vazao_8_mca": 10.0,
+        "vazao_10_mca": 8.5,
+        "vazao_12_mca": 9.6,
+        "vazao_14_mca": 2.1,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "7A-M/T",
+        "potencia_cv": 0.75,
+        "vazao_6_mca": None,
+        "vazao_8_mca": None,
+        "vazao_10_mca": 10.8,
+        "vazao_12_mca": 13.2,
+        "vazao_14_mca": 7.6,
+        "vazao_16_mca": 4.2,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "1A-M/T",
+        "potencia_cv": 1.0,
+        "vazao_6_mca": None,
+        "vazao_8_mca": None,
+        "vazao_10_mca": None,
+        "vazao_12_mca": None,
+        "vazao_14_mca": 11.7,
+        "vazao_16_mca": 9.6,
+        "vazao_18_mca": 4.6
+    },
+    {
+        "modelo": "15B-M/T",
+        "potencia_cv": 1.5,
+        "vazao_8_mca": 28.5,
+        "vazao_10_mca": 26.5,
+        "vazao_12_mca": 24.2,
+        "vazao_14_mca": 21.6,
+        "vazao_16_mca": 18.6,
+        "vazao_18_mca": 15.3,
+        "vazao_20_mca": 11.6,
+        "vazao_22_mca": 6.4,
+        "vazao_24_mca": None
+    },
+    {
+        "modelo": "2B-M/T",
+        "potencia_cv": 2.0,
+        "vazao_8_mca": 34.0,
+        "vazao_10_mca": 32.2,
+        "vazao_12_mca": 30.2,
+        "vazao_14_mca": 27.8,
+        "vazao_16_mca": 25.0,
+        "vazao_18_mca": 22.0,
+        "vazao_20_mca": 17.6,
+        "vazao_22_mca": 12.4,
+        "vazao_24_mca": None
+    },
+    {
+        "modelo": "3B-M/T",
+        "potencia_cv": 3.0,
+        "vazao_8_mca": None,
+        "vazao_10_mca": 39.2,
+        "vazao_12_mca": 37.6,
+        "vazao_14_mca": 35.6,
+        "vazao_16_mca": 33.0,
+        "vazao_18_mca": 29.8,
+        "vazao_20_mca": 25.8,
+        "vazao_22_mca": 21.0,
+        "vazao_24_mca": 15.0
+    },
+    {
+        "modelo": "C3A-M/T",
+        "potencia_cv": 0.33,
+        "vazao_6_mca": 9.6,
+        "vazao_7_mca": 8.5,
+        "vazao_8_mca": 7.1,
+        "vazao_9_mca": 5.6,
+        "vazao_10_mca": 3.9,
+        "vazao_11_mca": None,
+        "vazao_13_mca": None
+    },
+    {
+        "modelo": "C5A-M/T",
+        "potencia_cv": 0.5,
+        "vazao_6_mca": None,
+        "vazao_7_mca": None,
+        "vazao_8_mca": 11.3,
+        "vazao_9_mca": 8.8,
+        "vazao_10_mca": 8.0,
+        "vazao_11_mca": 5.8,
+        "vazao_13_mca": None
+    },
+    {
+        "modelo": "C7A-M/T",
+        "potencia_cv": 0.75,
+        "vazao_6_mca": None,
+        "vazao_7_mca": None,
+        "vazao_8_mca": None,
+        "vazao_9_mca": 14.0,
+        "vazao_10_mca": 11.8,
+        "vazao_11_mca": 9.5,
+        "vazao_13_mca": 4.0
+    },
+
+    {
+        "modelo": "C1B-M/T",
+        "potencia_cv": 1.0,
+        "vazao_6_mca": 21.9,
+        "vazao_8_mca": 19.3,
+        "vazao_10_mca": 16.4,
+        "vazao_12_mca": 12.9,
+        "vazao_14_mca": 8.4,
+        "vazao_16_mca": None
+    },
+    {
+        "modelo": "C15B-M/T",
+        "potencia_cv": 1.5,
+        "vazao_6_mca": 9.1,
+        "vazao_8_mca": 24.3,
+        "vazao_10_mca": 21.3,
+        "vazao_12_mca": 17.8,
+        "vazao_14_mca": 13.4,
+        "vazao_16_mca": 6.0
+    },
+    {
+        "modelo": "C2B-M/T",
+        "potencia_cv": 2.0,
+        "vazao_6_mca": None,
+        "vazao_8_mca": 30.8,
+        "vazao_10_mca": 28.1,
+        "vazao_12_mca": 24.4,
+        "vazao_14_mca": 19.8,
+        "vazao_16_mca": 14.0
+    }
+
+
+    ]
+
+# ==========================================
+# BOMBAS – SYLLENT COM PRÉ FILTRO
+# ==========================================
+BANCO_BOMBAS_SYLLENT = [
+
+    {
+        "modelo": "PF42E0304AS1 / PF42E0311AS1",
+        "potencia_cv": 0.25,
+        "vazao_2_mca": 12.8,
+        "vazao_4_mca": 10.7,
+        "vazao_6_mca": 7.5,
+        "vazao_8_mca": 4.0,
+        "vazao_10_mca": 0.0,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "PF42E0305AS1 / PF42E0312AS1",
+        "potencia_cv": 0.33,
+        "vazao_2_mca": 13.3,
+        "vazao_4_mca": 11.1,
+        "vazao_6_mca": 8.4,
+        "vazao_8_mca": 5.3,
+        "vazao_10_mca": 0.0,
+        "vazao_12_mca": None,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "PF42E0306AS1 / PF42E0313AS1",
+        "potencia_cv": 0.5,
+        "vazao_2_mca": 16.5,
+        "vazao_4_mca": 14.2,
+        "vazao_6_mca": 11.1,
+        "vazao_8_mca": 8.4,
+        "vazao_10_mca": 4.5,
+        "vazao_12_mca": 0.0,
+        "vazao_14_mca": None,
+        "vazao_16_mca": None,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "PF42E0307AS1 / PF42E0314AS1",
+        "potencia_cv": 0.75,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 18.6,
+        "vazao_6_mca": 16.0,
+        "vazao_8_mca": 13.2,
+        "vazao_10_mca": 10.1,
+        "vazao_12_mca": 6.4,
+        "vazao_14_mca": 2.1,
+        "vazao_16_mca": 0.0,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "PF42E0308AS1 / PF42E0315AS1",
+        "potencia_cv": 1.0,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 19.5,
+        "vazao_6_mca": 17.5,
+        "vazao_8_mca": 14.9,
+        "vazao_10_mca": 11.7,
+        "vazao_12_mca": 8.3,
+        "vazao_14_mca": 4.5,
+        "vazao_16_mca": 0.0,
+        "vazao_18_mca": None
+    },
+    {
+        "modelo": "PF42E0309AS1 / PF42E0316AS1",
+        "potencia_cv": 1.5,
+        "vazao_2_mca": None,
+        "vazao_4_mca": 20.5,
+        "vazao_6_mca": 19.0,
+        "vazao_8_mca": 17.1,
+        "vazao_10_mca": 14.3,
+        "vazao_12_mca": 11.6,
+        "vazao_14_mca": 8.4,
+        "vazao_16_mca": 5.1,
+        "vazao_18_mca": 1.8
+    }
+
+    ]
 
 # ==========================================
 # BOMBAS – Lista combinada (para compatibilidade)
 # ==========================================
+
 BANCO_BOMBAS = BANCO_BOMBAS_BMC + BANCO_BOMBAS_BMU
-BANCO_BOMBAS_TT = BANCO_BOMBAS_BMC + BANCO_BOMBAS_BMU + BANCO_BOMBAS_BM + BANCO_BOMBAS_BMGC
+BANCO_BOMBAS_SODRAMAR = BANCO_BOMBAS_BMC + BANCO_BOMBAS_BMU + BANCO_BOMBAS_BM + BANCO_BOMBAS_BMGC
+BANCO_BOMBAS_OF = BANCO_BOMBAS_JACUZZI + BANCO_BOMBAS_SYLLENT
+BANCO_BOMBAS_TT = BANCO_BOMBAS_SODRAMAR + BANCO_BOMBAS_OF

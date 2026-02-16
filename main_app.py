@@ -127,7 +127,6 @@ def show_home():
     **Módulos em desenvolvimento:**
     - Cascatas 
     - Aquecimento por trocador de calor elétrico
-    - Verificação de suscetibilidade à cavitação
     """)
 
 def run():

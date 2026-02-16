@@ -68,7 +68,7 @@ def run() -> None:
     """
     st.title("Banco de Dados de Equipamentos")
 
-    with st.expander("Filtros FM Sodramar", expanded=True):
+    with st.expander("Filtros FM Sodramar", expanded=False):
         st.subheader("Características Técnicas dos Filtros")
         df_filtros = formatar_tabela_filtros()
         st.dataframe(
