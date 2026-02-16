@@ -3,20 +3,24 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
-from typing import List, Tuple, Optional, Any, Callable
+import re
+from typing import List, Tuple, Optional, Callable
 from tracking import track_access
-from io import StringIO
-import sys
-from modules.data import BANCO_FILTROS, BANCO_BOMBAS, BANCO_BOMBAS_TT
+from modules.data import (
+    BANCO_FILTROS,
+    BANCO_BOMBAS_BMC,
+    BANCO_BOMBAS_BMGC,
+    BANCO_BOMBAS_BM,
+    BANCO_BOMBAS_BMU,
+    BANCO_BOMBAS_SYLLENT,
+    BANCO_BOMBAS_JACUZZI
+)
 from modules.calc_utils import ajustar_curva_pchip, encontrar_interseccao_curvas
 
 
 def formatar_tabela_filtros() -> pd.DataFrame:
     """
     Formata os dados de filtros para exibição em tabela.
-    
-    Returns:
-        pd.DataFrame: DataFrame formatado com colunas renomeadas.
     """
     df = pd.DataFrame(BANCO_FILTROS)
     df = df.rename(columns={
@@ -34,40 +38,74 @@ def formatar_tabela_filtros() -> pd.DataFrame:
     return df
 
 
-def formatar_tabela_bombas() -> pd.DataFrame:
+@st.cache_data(show_spinner=False)
+def carregar_dados_bombas() -> pd.DataFrame:
     """
-    Formata os dados de bombas para exibição em tabela (pivot).
-    Converto o formato de lista de dicionários para um DataFrame pivotado
-    onde as colunas são as cargas (mca) e os valores são as vazões.
-    
-    Returns:
-        pd.DataFrame: DataFrame formatado.
+    Carrega e consolida os dados de todos os bancos de bombas,
+    adicionando a coluna 'Linha'. O resultado é cacheado para performance.
     """
-    df = pd.DataFrame(BANCO_BOMBAS_TT)
-    # Reformata colunas de vazão
-    df = df.melt(id_vars=["modelo", "potencia_cv"],
-                 var_name="Carga",
-                 value_name="Vazão (m³/h)")
-    df["Carga"] = df["Carga"].str.replace("vazao_", "").str.replace("_mca", " mca")
-    df = df.pivot_table(index=["modelo", "potencia_cv"],
-                        columns="Carga",
-                        values="Vazão (m³/h)").reset_index()
-    df = df.rename(columns={
+    bancos = [
+        ("Sodramar - Linha BMC", BANCO_BOMBAS_BMC),
+        ("Sodramar - Linha BMGC", BANCO_BOMBAS_BMGC),
+        ("Sodramar - Linha BM", BANCO_BOMBAS_BM),
+        ("Sodramar - Linha BMU", BANCO_BOMBAS_BMU),
+        ("Syllent - Linha piscinas com pré-filtro", BANCO_BOMBAS_SYLLENT),
+        ("Jacuzzi - Linha recirculação piscina", BANCO_BOMBAS_JACUZZI),
+    ]
+
+    dfs = []
+    for linha, dados in bancos:
+        df = pd.DataFrame(dados)
+        df["Linha"] = linha
+        dfs.append(df)
+
+    df_consolidado = pd.concat(dfs, ignore_index=True)
+
+    # Transformar para formato longo (melt)
+    df_long = df_consolidado.melt(
+        id_vars=["modelo", "potencia_cv", "Linha"],
+        var_name="Carga",
+        value_name="Vazão (m³/h)"
+    )
+
+    # Limpeza segura dos nomes das colunas de carga (sem interpretar regex)
+    df_long["Carga"] = (df_long["Carga"]
+                        .str.replace("vazao_", "", regex=False)
+                        .str.replace("_mca", " mca", regex=False))
+
+    # Pivot para formato wide (cada carga vira uma coluna)
+    df_wide = df_long.pivot_table(
+        index=["modelo", "potencia_cv", "Linha"],
+        columns="Carga",
+        values="Vazão (m³/h)"
+    ).reset_index()
+
+    # Renomear colunas para exibição
+    df_wide = df_wide.rename(columns={
         "modelo": "Modelo",
         "potencia_cv": "Potência (cv)"
     })
-    return df
 
-@track_access("database_equipamentos")  # ← Decorador aplicado
+    return df_wide
+
+
+def ordenar_colunas_pressao(colunas):
+    """
+    Função auxiliar para ordenar colunas de pressão de forma robusta.
+    Extrai o número inicial do nome (ex: '2 mca' -> 2.0) e usa como chave.
+    Colunas que não começam com número vão para o final.
+    """
+    def extrair_numero(col):
+        match = re.search(r"^(\d+(?:\.\d+)?)", str(col))
+        return float(match.group(1)) if match else float('inf')
+    return sorted(colunas, key=extrair_numero)
+
+
+@track_access("database_equipamentos")
 def run() -> None:
-    """
-    Executa o módulo de Banco de Dados de Equipamentos.
-    
-    Exibe tabelas de especificações de filtros e curvas de desempenho de bombas.
-    Permite verificar o ponto de funcionamento da bomba cruzando com a curva do sistema.
-    """
     st.title("Banco de Dados de Equipamentos")
 
+    # ========== FILTROS ==========
     with st.expander("Filtros FM Sodramar", expanded=False):
         st.subheader("Características Técnicas dos Filtros")
         df_filtros = formatar_tabela_filtros()
@@ -88,47 +126,76 @@ def run() -> None:
             mime='text/csv'
         )
 
-    with st.expander("Motobombas Sodramar", expanded=True):
+    # ========== MOTOBOMBAS ==========
+    with st.expander("Motobombas", expanded=True):
         st.subheader("Curvas de Desempenho das Motobombas")
-        df_bombas = formatar_tabela_bombas()
 
+        # Carregar dados consolidados (com cache)
+        df_bombas_consolidado = carregar_dados_bombas()
+
+        # Seletor de linha (inclui opção "Todas as Linhas")
+        linhas_disponiveis = ["Todas as Linhas"] + sorted(df_bombas_consolidado["Linha"].unique())
+        linha_selecionada = st.selectbox(
+            "Selecione a Linha:",
+            options=linhas_disponiveis,
+            index=3  # padrão = primeira linha específica
+        )
+
+        # Filtrar DataFrame conforme linha escolhida
+        if linha_selecionada == "Todas as Linhas":
+            df_bombas_filtrado = df_bombas_consolidado.copy()
+        else:
+            df_bombas_filtrado = df_bombas_consolidado[df_bombas_consolidado["Linha"] == linha_selecionada]
+
+        # Verificar se existem modelos para a linha selecionada
+        modelos_disponiveis = df_bombas_filtrado["Modelo"].dropna().unique()
+        if len(modelos_disponiveis) == 0:
+            st.warning("Nenhum modelo encontrado para a linha selecionada.")
+            st.stop()  # Interrompe a execução do módulo
+
+        # Layout: coluna para controles (esquerda) e gráfico (direita)
         cols = st.columns([1, 3])
-        with cols[0]:
-            modelo_selecionado: str = st.selectbox(
-                "Selecione o Modelo:",
-                options=df_bombas["Modelo"].unique()
-            )
 
-            # ===== NOVO CAMPO DE VERIFICAÇÃO =====
-            verificar_ponto: bool = st.checkbox("Verificação do ponto de funcionamento da MB")
+        with cols[0]:
+            # Criar opções de modelo com potência para facilitar a escolha
+            df_bombas_filtrado["Modelo_completo"] = (
+                df_bombas_filtrado["Modelo"] + " — " + df_bombas_filtrado["Potência (cv)"].astype(str) + " cv"
+            )
+            opcoes_modelo = df_bombas_filtrado["Modelo_completo"].drop_duplicates().tolist()
+            escolha_modelo = st.selectbox("Selecione o Modelo:", options=opcoes_modelo)
+
+            # Extrair o nome real do modelo (parte antes do " — ")
+            modelo_selecionado = escolha_modelo.split(" — ")[0]
+
+            # ===== VERIFICAÇÃO DO PONTO DE FUNCIONAMENTO =====
+            verificar_ponto = st.checkbox("Verificação do ponto de funcionamento da MB")
             curva_instalacao: Optional[Callable[[float], float]] = None
 
             if verificar_ponto:
                 st.markdown("**Insira os coeficientes da Curva do Sistema**")
                 st.markdown("Equação: $H = A \\cdot Q^2 + B \\cdot Q + C$")
-                
+
                 col_coef1, col_coef2, col_coef3 = st.columns(3)
                 with col_coef1:
-                    coef_a: float = st.number_input("Coeficiente A", value=0.0023, format="%.6f", step=0.0001)
+                    coef_a = st.number_input("Coeficiente A", value=0.0023, format="%.6f", step=0.0001)
                 with col_coef2:
-                    coef_b: float = st.number_input("Coeficiente B", value=0.0, format="%.4f")
+                    coef_b = st.number_input("Coeficiente B", value=0.0, format="%.4f")
                 with col_coef3:
-                    coef_c: float = st.number_input("Coeficiente C", value=0.0, format="%.4f")
+                    coef_c = st.number_input("Coeficiente C", value=0.0, format="%.4f")
 
-                # Função lambda segura para calcular a curva
                 curva_instalacao = lambda Q: coef_a * (Q**2) + coef_b * Q + coef_c
 
         with cols[1]:
-            df_filtrado = df_bombas[df_bombas["Modelo"] == modelo_selecionado]
+            # Dados do modelo selecionado
+            df_filtrado = df_bombas_filtrado[df_bombas_filtrado["Modelo"] == modelo_selecionado]
 
-            # Ordenar colunas de pressão numericamente
-            colunas_pressao = df_filtrado.columns[2:]  # Ignorar as duas primeiras colunas (Modelo e Potência)
+            # Identificar colunas de pressão (todas após as três primeiras)
+            colunas_pressao = df_filtrado.columns[3:]  # Ignora Modelo, Potência, Linha
+            colunas_ordenadas = ordenar_colunas_pressao(colunas_pressao)
 
-            # Extrair valores numéricos das colunas e ordenar
-            colunas_ordenadas = sorted(colunas_pressao, key=lambda x: float(x.split()[0]))
-
-            # Reordenar o dataframe
-            df_ordenado = df_filtrado[['Modelo', 'Potência (cv)'] + colunas_ordenadas]
+            # Preparar DataFrame para exibição (sem a coluna Linha)
+            colunas_exibicao = ['Modelo', 'Potência (cv)'] + colunas_ordenadas
+            df_ordenado = df_filtrado[colunas_exibicao]
 
             st.dataframe(
                 df_ordenado,
@@ -139,21 +206,21 @@ def run() -> None:
                 }
             )
 
-            # Processamento dos dados para o gráfico
-
-            # Extrair os pontos (vazão, pressão) dos dados filtrados
+            # Extrair pontos (vazão, pressão) para o gráfico
             pontos: List[Tuple[float, float]] = []
-            for coluna in df_filtrado.columns[2:]:
-                if pd.notna(df_filtrado[coluna].iloc[0]):
-                    # Extrai a pressão a partir do nome da coluna (ex.: "2 mca")
-                    pressao = float(coluna.split()[0])
-                    vazao = df_filtrado[coluna].iloc[0]
-                    pontos.append((vazao, pressao))
+            for coluna in colunas_pressao:
+                valor = df_filtrado[coluna].iloc[0]
+                if pd.notna(valor):
+                    try:
+                        pressao = float(coluna.split()[0])  # ex: "2 mca" -> 2.0
+                        vazao = float(valor)
+                        pontos.append((vazao, pressao))
+                    except (ValueError, IndexError):
+                        continue  # ignora colunas com formato inesperado
 
             if len(pontos) >= 2:
                 q_point: Optional[float] = None
                 h_point: Optional[float] = None
-                # Ordenar os pontos com base na vazão (variável independente)
                 pontos_ordenados = sorted(pontos, key=lambda x: x[0])
                 vazoes = np.array([p[0] for p in pontos_ordenados])
                 pressoes = np.array([p[1] for p in pontos_ordenados])
@@ -162,25 +229,20 @@ def run() -> None:
                     # Ajuste com PCHIP
                     vazoes_interp, pressoes_interp, _ = ajustar_curva_pchip(vazoes, pressoes)
 
-                    # Cálculo da curva da instalação
-                    # 'curva_instalacao' é uma função fornecida pelo usuário que retorna a pressão para uma dada vazão
                     pressoes_sistema = []
                     anotacoes = []
                     shapes = []
 
                     if verificar_ponto and curva_instalacao:
                         try:
-                            # Gerar os pontos da curva de instalação para os mesmos valores de vazão interpolados
                             pressoes_sistema = [curva_instalacao(q) for q in vazoes_interp]
-
-                            # Encontrar os pontos de interseção usando a função utilitária
-                            pontos_interseccao = encontrar_interseccao_curvas(vazoes_interp, pressoes_interp, curva_instalacao)
+                            pontos_interseccao = encontrar_interseccao_curvas(
+                                vazoes_interp, pressoes_interp, curva_instalacao
+                            )
 
                             for q, h in pontos_interseccao:
                                 q_point = q
                                 h_point = h
-
-                                # Configurar anotações para exibir o ponto de operação
                                 anotacoes.append(dict(
                                     x=q_point,
                                     y=h_point,
@@ -190,8 +252,6 @@ def run() -> None:
                                     ax=20,
                                     ay=-40
                                 ))
-
-                                # Adicionar linhas auxiliares (shapes) para marcar o ponto de interseção
                                 shapes.append(dict(
                                     type="line",
                                     x0=q_point,
@@ -203,10 +263,9 @@ def run() -> None:
                         except Exception as e:
                             st.error(f"Erro na curva da instalação: {str(e)}")
 
-                    # Criação do gráfico com Plotly
+                    # Criar gráfico
                     fig = go.Figure()
 
-                    # Adicionar a curva da instalação, se disponível
                     if verificar_ponto and pressoes_sistema:
                         fig.add_trace(go.Scatter(
                             x=vazoes_interp,
@@ -216,7 +275,6 @@ def run() -> None:
                             line=dict(color='green', width=2, dash='dash')
                         ))
 
-                    # Adicionar a curva ajustada da motobomba (utilizando PCHIP)
                     fig.add_trace(go.Scatter(
                         x=vazoes_interp,
                         y=pressoes_interp,
@@ -225,7 +283,6 @@ def run() -> None:
                         line=dict(color='blue', width=2)
                     ))
 
-                    # Adicionar os pontos originais (dados do fabricante)
                     fig.add_trace(go.Scatter(
                         x=vazoes,
                         y=pressoes,
@@ -234,15 +291,16 @@ def run() -> None:
                         marker=dict(color='red', size=8)
                     ))
 
-                    # Adicionar anotações e linhas auxiliares, se houver interseção
                     if anotacoes:
-                        fig.update_layout(
-                            annotations=anotacoes,
-                            shapes=shapes
-                        )
+                        fig.update_layout(annotations=anotacoes, shapes=shapes)
+
+                    # Título mais informativo (inclui linha)
+                    titulo = f'Curva de Desempenho - {modelo_selecionado}'
+                    if linha_selecionada != "Todas as Linhas":
+                        titulo += f' — {linha_selecionada}'
 
                     fig.update_layout(
-                        title=f'Curva de Desempenho - {modelo_selecionado}',
+                        title=titulo,
                         xaxis_title='Vazão (m³/h)',
                         yaxis_title='Pressão (m.c.a.)',
                         showlegend=True,
@@ -250,8 +308,7 @@ def run() -> None:
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Exibir informações do ponto de operação, se encontrado
+
                     if anotacoes and q_point is not None:
                         st.success("**Ponto de Operação Encontrado**")
                         col1, col2 = st.columns(2)
@@ -260,7 +317,6 @@ def run() -> None:
                         with col2:
                             st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
-                    # Exibir mensagem informativa sobre o método PCHIP
                     st.info("Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite), mais detalhes em Memória de cálculo.")
 
                 except np.linalg.LinAlgError:
@@ -268,34 +324,27 @@ def run() -> None:
                     # Fallback para interpolação linear
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
-
-                    # Plotar versão simples com interpolação linear
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
                     fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
                     st.plotly_chart(fig, use_container_width=True)
 
             else:
-                st.warning("Dados insuficientes para gerar a curva")
+                st.warning("Dados insuficientes para gerar a curva (mínimo 2 pontos necessários).")
 
-            # Botão de download dos dados
+            # Botão de download dos dados consolidados (inclui coluna Linha)
             st.download_button(
                 label="Baixar Dados de Motobombas (CSV)",
-                data=df_bombas.to_csv(index=False).encode('utf-8'),
+                data=df_bombas_consolidado.to_csv(index=False).encode('utf-8'),
                 file_name='motobombas.csv',
                 mime='text/csv'
             )
 
         st.markdown("""
-
-                    **Legenda:**
-
-                    - Valores em m³/h para diferentes alturas manométricas
-
-                    - 'None' indica valor não especificado pelo fabricante
-
-                    """)
-
+        **Legenda:**
+        - Valores em m³/h para diferentes alturas manométricas
+        - 'None' indica valor não especificado pelo fabricante
+        """)
 
 
 if __name__ == "__main__":
