@@ -95,9 +95,11 @@ def ordenar_colunas_pressao(colunas):
     Extrai o número inicial do nome (ex: '2 mca' -> 2.0) e usa como chave.
     Colunas que não começam com número vão para o final.
     """
+
     def extrair_numero(col):
         match = re.search(r"^(\d+(?:\.\d+)?)", str(col))
         return float(match.group(1)) if match else float('inf')
+
     return sorted(colunas, key=extrair_numero)
 
 
@@ -135,10 +137,18 @@ def run() -> None:
 
         # Seletor de linha (inclui opção "Todas as Linhas")
         linhas_disponiveis = ["Todas as Linhas"] + sorted(df_bombas_consolidado["Linha"].unique())
+
+        # Define a linha padrão como "Sodramar - Linha BMC"
+        linha_default = "Sodramar - Linha BMC"
+        if linha_default in linhas_disponiveis:
+            idx_default = linhas_disponiveis.index(linha_default)
+        else:
+            idx_default = 1  # fallback: primeira linha específica
+
         linha_selecionada = st.selectbox(
             "Selecione a Linha:",
             options=linhas_disponiveis,
-            index=3  # padrão = primeira linha específica
+            index=idx_default
         )
 
         # Filtrar DataFrame conforme linha escolhida
@@ -157,15 +167,14 @@ def run() -> None:
         cols = st.columns([1, 3])
 
         with cols[0]:
-            # Criar opções de modelo com potência para facilitar a escolha
-            df_bombas_filtrado["Modelo_completo"] = (
-                df_bombas_filtrado["Modelo"] + " — " + df_bombas_filtrado["Potência (cv)"].astype(str) + " cv"
-            )
-            opcoes_modelo = df_bombas_filtrado["Modelo_completo"].drop_duplicates().tolist()
-            escolha_modelo = st.selectbox("Selecione o Modelo:", options=opcoes_modelo)
+            # Ordenar modelos por potência (crescente)
+            df_modelos = df_bombas_filtrado[["Modelo", "Potência (cv)"]].drop_duplicates()
+            df_modelos = df_modelos.sort_values(by="Potência (cv)")
+            opcoes_modelo = (df_modelos["Modelo"] + " — " + df_modelos["Potência (cv)"].astype(str) + " cv").tolist()
+            modelo_para_label = dict(zip(opcoes_modelo, df_modelos["Modelo"]))
 
-            # Extrair o nome real do modelo (parte antes do " — ")
-            modelo_selecionado = escolha_modelo.split(" — ")[0]
+            escolha_modelo = st.selectbox("Selecione o Modelo:", options=opcoes_modelo)
+            modelo_selecionado = modelo_para_label[escolha_modelo]
 
             # ===== VERIFICAÇÃO DO PONTO DE FUNCIONAMENTO =====
             verificar_ponto = st.checkbox("Verificação do ponto de funcionamento da MB")
@@ -183,18 +192,37 @@ def run() -> None:
                 with col_coef3:
                     coef_c = st.number_input("Coeficiente C", value=0.0, format="%.4f")
 
-                curva_instalacao = lambda Q: coef_a * (Q**2) + coef_b * Q + coef_c
+                curva_instalacao = lambda Q: coef_a * (Q ** 2) + coef_b * Q + coef_c
 
         with cols[1]:
             # Dados do modelo selecionado
             df_filtrado = df_bombas_filtrado[df_bombas_filtrado["Modelo"] == modelo_selecionado]
 
-            # Identificar colunas de pressão (todas após as três primeiras)
+            # Identificar todas as colunas de pressão (usadas no gráfico)
             colunas_pressao = df_filtrado.columns[3:]  # Ignora Modelo, Potência, Linha
             colunas_ordenadas = ordenar_colunas_pressao(colunas_pressao)
 
-            # Preparar DataFrame para exibição (sem a coluna Linha)
-            colunas_exibicao = ['Modelo', 'Potência (cv)'] + colunas_ordenadas
+            # --- Filtrar colunas para exibição na tabela conforme regra ---
+            def coluna_deve_ser_exibida(nome_coluna, linha):
+                """Retorna True se a coluna de pressão deve aparecer na tabela."""
+                # Se for "Todas as Linhas" ou linha Jacuzzi, exibe todas
+                if linha == "Todas as Linhas" or "Jacuzzi" in linha:
+                    return True
+                # Extrair o número da coluna
+                match = re.search(r"^(\d+(?:\.\d+)?)", nome_coluna)
+                if match:
+                    valor = float(match.group(1))
+                    # Verificar se é múltiplo de 2 (considerando inteiros)
+                    # Usamos uma tolerância para evitar problemas de ponto flutuante
+                    return abs(valor % 2) < 1e-9
+                return False  # se não conseguir extrair, não exibe
+
+            # Aplicar filtro
+            colunas_exibir = [col for col in colunas_ordenadas
+                              if coluna_deve_ser_exibida(col, linha_selecionada)]
+
+            # Montar DataFrame para exibição (apenas colunas selecionadas)
+            colunas_exibicao = ['Modelo', 'Potência (cv)'] + colunas_exibir
             df_ordenado = df_filtrado[colunas_exibicao]
 
             st.dataframe(
@@ -206,17 +234,17 @@ def run() -> None:
                 }
             )
 
-            # Extrair pontos (vazão, pressão) para o gráfico
+            # Extrair pontos (vazão, pressão) para o gráfico (usando TODAS as colunas)
             pontos: List[Tuple[float, float]] = []
-            for coluna in colunas_pressao:
+            for coluna in colunas_pressao:  # usa todas, não apenas as exibidas
                 valor = df_filtrado[coluna].iloc[0]
                 if pd.notna(valor):
                     try:
-                        pressao = float(coluna.split()[0])  # ex: "2 mca" -> 2.0
+                        pressao = float(coluna.split()[0])
                         vazao = float(valor)
                         pontos.append((vazao, pressao))
                     except (ValueError, IndexError):
-                        continue  # ignora colunas com formato inesperado
+                        continue
 
             if len(pontos) >= 2:
                 q_point: Optional[float] = None
@@ -317,7 +345,8 @@ def run() -> None:
                         with col2:
                             st.metric("Pressão Requerida", f"{h_point:.1f} mca")
 
-                    st.info("Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite), mais detalhes em Memória de cálculo.")
+                    st.info(
+                        "Ajuste realizado com PCHIP (Interpolação por Partes Cúbicas Hermite), mais detalhes em Memória de cálculo.")
 
                 except np.linalg.LinAlgError:
                     st.error("Não foi possível calcular o ajuste. Verifique os dados.")
@@ -325,7 +354,8 @@ def run() -> None:
                     vazoes_interp = np.linspace(min(vazoes), max(vazoes), 100)
                     pressoes_interp = np.interp(vazoes_interp, vazoes, pressoes)
                     fig = go.Figure()
-                    fig.add_trace(go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
+                    fig.add_trace(
+                        go.Scatter(x=vazoes_interp, y=pressoes_interp, mode='lines', name='Interpolação Linear'))
                     fig.add_trace(go.Scatter(x=vazoes, y=pressoes, mode='markers', name='Dados Originais'))
                     st.plotly_chart(fig, use_container_width=True)
 
