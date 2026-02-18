@@ -117,13 +117,8 @@ def interface_conexoes(label: str) -> Dict[str, int]:
 def main() -> None:
     st.title("💧 Dimensionamento de Perda de Carga")
     st.markdown("""
-        **Métodos:**  
-        - Regime laminar: f = 64/Re  
-        - Regime turbulento: Colebrook-White (Newton-Raphson)  
-        - Perdas localizadas: comprimentos equivalentes  
-        - Múltiplos retornos (piscina): vazão reduzida progressivamente, trecho secundário segmentado  
-        - Velocidades limites: NBR 10.339 (sucção ≤ 1,8 m/s; recalque ≤ 3,0 m/s)
-        """)
+        **Inclui alerta de velocidade limite de acordo com a ABNT NBR 10.339 (sucção ≤ 1,8 m/s; recalque ≤ 3,0 m/s:**  
+              """)
 
     with st.form(key='form_hidraulica'):
         Q_m3h = st.number_input(
@@ -138,12 +133,13 @@ def main() -> None:
             diam_suc = st.selectbox(
                 "Diâmetro Externo (mm):",
                 list(DIAMETROS.keys()),
+                index=3,
                 key='dsuc'
             )
         with col_s2:
             L_suc = st.number_input(
                 "Comprimento Real (m):",
-                min_value=0.1, max_value=1000.0, value=6.0, step=1.0,
+                min_value=0.1, max_value=1000.0, value=6.0, step=6.0,
                 key='lsuc'
             )
         conexoes_suc = interface_conexoes("Sucção")
@@ -160,37 +156,43 @@ def main() -> None:
             diam_prim = st.selectbox(
                 "Diâmetro Externo (mm):",
                 list(DIAMETROS.keys()),
+                index=3,
                 key='dprim'
             )
         with col_rp2:
             L_prim = st.number_input(
                 "Comprimento (m):",
-                min_value=0.1, max_value=1000.0, value=5.0, step=1.0,
+                min_value=0.1, max_value=1000.0, value=6.0, step=6.0,
                 key='lprim'
             )
         conex_prim = interface_conexoes("Ramal Primário")
 
         # Ramal Secundário
         st.markdown("**Ramal Secundário** (trechos com retornos)")
-        col_rs1, col_rs2, col_rs3 = st.columns([2, 2, 1])
+        col_rs1, col_rs2 = st.columns(2)
         with col_rs1:
             diam_sec = st.selectbox(
                 "Diâmetro Externo (mm):",
                 list(DIAMETROS.keys()),
+                index=3,
                 key='dsec'
             )
         with col_rs2:
             L_sec = st.number_input(
                 "Comprimento (m):",
-                min_value=0.1, max_value=1000.0, value=12.0, step=1.0,
+                min_value=0.1, max_value=1000.0, value=12.0, step=6.0,
                 key='lsec'
             )
-        with col_rs3:
-            num_retornos = st.number_input(
+
+        # Slider centralizado para número de retornos
+        col_center1, col_center2, col_center3 = st.columns([1, 2, 1])
+        with col_center2:
+            num_retornos = st.slider(
                 "Nº Retornos:",
-                min_value=1, max_value=100, value=4, step=1,
+                min_value=1, max_value=20, value=4, step=1,
                 key='nret'
             )
+
         conex_sec = interface_conexoes("Ramal Secundário")
 
         btn = st.form_submit_button("Calcular Perda de Carga", type="primary", use_container_width=True)
