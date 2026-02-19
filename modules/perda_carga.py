@@ -17,6 +17,9 @@ def calcular_linha(Q_m3h: float, diam_ext: str, L_real: float, conexoes: Dict[st
     Calcula propriedades hidráulicas de um trecho com vazão constante.
     Retorna dicionário com D_int (mm), V (m/s), Re, f, L_eq (m) e hf_total (mca) – sem margem.
     """
+    if diam_ext not in DIAMETROS:
+        raise KeyError(f"Diâmetro '{diam_ext}' não encontrado em DIAMETROS.")
+
     D_int = DIAMETROS[diam_ext] / 1000  # m
     Q = Q_m3h / 3600                     # m³/s
     A = math.pi * (D_int ** 2) / 4
@@ -24,10 +27,10 @@ def calcular_linha(Q_m3h: float, diam_ext: str, L_real: float, conexoes: Dict[st
     Re = V * D_int / VISCOSIDADE_AGUA if D_int > 0 else 0
     f = calcular_fator_atrito(Re, D_int)
 
-    L_eq = sum(qtd * CONEXOES_EQUIV[conexao].get(diam_ext, 0)
+    L_eq = sum(qtd * CONEXOES_EQUIV.get(conexao, {}).get(diam_ext, 0)
                for conexao, qtd in conexoes.items())
 
-    hf_total = f * ((L_real + L_eq) / D_int) * (V ** 2 / (2 * G))
+    hf_total = f * ((L_real + L_eq) / D_int) * (V ** 2 / (2 * G)) if D_int > 0 else 0
 
     return {
         'D_int': D_int * 1000,
@@ -44,45 +47,161 @@ def calcular_recalque_multiplos(Q_m3h: float, diam_prim: str, diam_sec: str,
                                 conex_p: Dict[str, int], conex_s: Dict[str, int]) -> Dict[str, Any]:
     """
     Calcula perda de carga no recalque com múltiplos retornos.
-    - Ramal primário: vazão total, diâmetro `diam_prim`.
-    - Ramal secundário: vazão reduzida progressivamente, diâmetro `diam_sec`.
-    Retorna dicionário com:
-        D_int_prim (mm), D_int_sec (mm), V_max (m/s), hf_total (mca),
-        hf_prim, hf_sec, segmentos (lista), L_eq_total.
+    Implementa a geometria equalizada:
+      - se num_retornos == 1: comportamento original (sem subdivisão)
+      - se num_retornos > 1: assume Tee no diâmetro primário + redução
+        imediata e 2 sub-ramais (cada sub-ramal recebe Q_total/2 no Tee).
+      - retornos são em série dentro de cada sub-ramal; se ímpar, um ramo tem 1 retorno a mais.
+    Observação: não adiciona comprimento equivalente por TÊ ou REDUÇÃO (conforme solicitado).
     """
-    # Ramal Primário
+    # validações básicas
+    if num_retornos < 1:
+        raise ValueError("num_retornos deve ser >= 1")
+    if Q_m3h <= 0:
+        raise ValueError("Q_m3h deve ser > 0")
+    if diam_prim not in DIAMETROS:
+        raise KeyError(f"Diâmetro primário '{diam_prim}' não encontrado em DIAMETROS.")
+    if diam_sec not in DIAMETROS:
+        raise KeyError(f"Diâmetro secundário '{diam_sec}' não encontrado em DIAMETROS.")
+
+    # --- Ramal Primário (até o tee) ---
     prim = calcular_linha(Q_m3h, diam_prim, L_prim, conex_p)
 
-    # Ramal Secundário
-    D_int_sec = DIAMETROS[diam_sec] / 1000
-    A_sec = math.pi * (D_int_sec ** 2) / 4
-    Q_total = Q_m3h / 3600
-    Q_retorno = Q_total / num_retornos
+    # --- parâmetros do secundário ---
+    D_int_sec = DIAMETROS[diam_sec] / 1000.0  # m
+    A_sec = math.pi * (D_int_sec ** 2) / 4.0
+    Q_total = Q_m3h / 3600.0  # m3/s
 
-    L_eq_sec = sum(qtd * CONEXOES_EQUIV[c].get(diam_sec, 0) for c, qtd in conex_s.items())
-    L_seg = (L_sec + L_eq_sec) / num_retornos
+    # Se apenas 1 retorno, mantém comportamento antigo (único ramo)
+    if num_retornos == 1:
+        Q_retorno = Q_total  # único retorno recebe toda a vazão do secundário
+        L_eq_sec = sum(qtd * CONEXOES_EQUIV.get(c, {}).get(diam_sec, 0) for c, qtd in conex_s.items())
+        L_seg = (L_sec + L_eq_sec) / 1
 
-    hf_sec_total = 0.0
-    segmentos = []
-    velocidades_sec = []
+        hf_sec_total = 0.0
+        segmentos = []
+        velocidades_sec = []
 
-    for i in range(1, num_retornos + 1):
-        Q_i = Q_total - (i - 1) * Q_retorno
-        V_i = Q_i / A_sec
-        Re_i = V_i * D_int_sec / VISCOSIDADE_AGUA
+        # único segmento (1 retorno)
+        Q_i = Q_total
+        V_i = Q_i / A_sec if A_sec > 0 else 0
+        Re_i = V_i * D_int_sec / VISCOSIDADE_AGUA if D_int_sec > 0 else 0
         f_i = calcular_fator_atrito(Re_i, D_int_sec)
-        hf_i = f_i * (L_seg / D_int_sec) * (V_i ** 2 / (2 * G))
+        hf_i = f_i * (L_seg / D_int_sec) * (V_i ** 2 / (2 * G)) if D_int_sec > 0 else 0
 
         hf_sec_total += hf_i
         velocidades_sec.append(V_i)
         segmentos.append({
-            'Seg.': i,
+            'Ram.': '',
+            'Seg.': 1,
             'Vazão (m³/h)': Q_i * 3600,
             'Vel. (m/s)': V_i,
             'Perda (mca)': hf_i
         })
 
-    v_max = max(prim['V'], max(velocidades_sec))
+        v_max = max([prim['V']] + velocidades_sec) if velocidades_sec else prim['V']
+
+        return {
+            'D_int_prim': prim['D_int'],
+            'D_int_sec': D_int_sec * 1000,
+            'V_max': v_max,
+            'hf_total': prim['hf_total'] + hf_sec_total,
+            'hf_prim': prim['hf_total'],
+            'hf_sec': hf_sec_total,
+            'segmentos': segmentos,
+            'L_eq_total': prim['L_eq'] + L_eq_sec
+        }
+
+    # --- num_retornos > 1 : subdividir em dois sub-ramais ---
+    # dividir retornos entre os dois sub-ramais (left terá o extra se ímpar)
+    n_left = math.ceil(num_retornos / 2)
+    n_right = num_retornos - n_left
+
+    # vazão dividida no tee: cada sub-ramal recebe metade
+    Q_branch = Q_total / 2.0  # m3/s por sub-ramal inicial
+
+    # distribuir conexões do secundário entre os sub-ramais proporcionalmente ao nº de retornos
+    conex_left: Dict[str, int] = {}
+    conex_right: Dict[str, int] = {}
+    for c, qtd in conex_s.items():
+        if qtd <= 0:
+            conex_left[c] = 0
+            conex_right[c] = 0
+            continue
+        # aloca inicialmente pela proporção de retornos (usar floor para estabilidade)
+        left_q = int(math.floor(qtd * (n_left / num_retornos)))
+        # garantir que não exceda e preservar soma
+        left_q = max(0, min(left_q, qtd))
+        right_q = qtd - left_q
+        conex_left[c] = left_q
+        conex_right[c] = right_q
+
+    # calcular comprimento equivalente por branch (apenas somar o equivalente das conexões alocadas)
+    L_eq_left = sum(q * CONEXOES_EQUIV.get(c, {}).get(diam_sec, 0) for c, q in conex_left.items())
+    L_eq_right = sum(q * CONEXOES_EQUIV.get(c, {}).get(diam_sec, 0) for c, q in conex_right.items())
+
+    # comprimento por segmento em cada branch (L_sec representando comprimento do sub-ramal até o retorno mais distante)
+    L_left_per_seg = (L_sec + L_eq_left) / n_left if n_left > 0 else 0
+    L_right_per_seg = (L_sec + L_eq_right) / n_right if n_right > 0 else 0
+
+    # calcular perdas nos segmentos de cada branch
+    hf_left = 0.0
+    velocidades_left: List[float] = []
+    segmentos_left: List[Dict[str, Any]] = []
+
+    if n_left > 0:
+        Q_retorno_left = Q_branch / n_left
+        for i in range(1, n_left + 1):
+            Q_i = Q_branch - (i - 1) * Q_retorno_left
+            V_i = Q_i / A_sec if A_sec > 0 else 0
+            Re_i = V_i * D_int_sec / VISCOSIDADE_AGUA if D_int_sec > 0 else 0
+            f_i = calcular_fator_atrito(Re_i, D_int_sec)
+            hf_i = f_i * (L_left_per_seg / D_int_sec) * (V_i ** 2 / (2 * G)) if D_int_sec > 0 else 0
+
+            hf_left += hf_i
+            velocidades_left.append(V_i)
+            segmentos_left.append({
+                'Ram.': 'L',
+                'Seg.': i,
+                'Vazão (m³/h)': Q_i * 3600,
+                'Vel. (m/s)': V_i,
+                'Perda (mca)': hf_i
+            })
+
+    hf_right = 0.0
+    velocidades_right: List[float] = []
+    segmentos_right: List[Dict[str, Any]] = []
+
+    if n_right > 0:
+        Q_retorno_right = Q_branch / n_right
+        for i in range(1, n_right + 1):
+            Q_i = Q_branch - (i - 1) * Q_retorno_right
+            V_i = Q_i / A_sec if A_sec > 0 else 0
+            Re_i = V_i * D_int_sec / VISCOSIDADE_AGUA if D_int_sec > 0 else 0
+            f_i = calcular_fator_atrito(Re_i, D_int_sec)
+            hf_i = f_i * (L_right_per_seg / D_int_sec) * (V_i ** 2 / (2 * G)) if D_int_sec > 0 else 0
+
+            hf_right += hf_i
+            velocidades_right.append(V_i)
+            segmentos_right.append({
+                'Ram.': 'R',
+                'Seg.': i,
+                'Vazão (m³/h)': Q_i * 3600,
+                'Vel. (m/s)': V_i,
+                'Perda (mca)': hf_i
+            })
+
+    hf_sec_total = hf_left + hf_right
+
+    # velocidade máxima entre primário e ambos sub-ramais
+    all_velocities = [prim['V']] + velocidades_left + velocidades_right
+    v_max = max(all_velocities) if all_velocities else prim['V']
+
+    # compor lista de segmentos para exibição (concatena left + right)
+    segmentos = segmentos_left + segmentos_right
+
+    # L_eq_total: primário + soma equivalentes dos secundários alocados
+    L_eq_total = prim['L_eq'] + L_eq_left + L_eq_right
 
     return {
         'D_int_prim': prim['D_int'],
@@ -92,7 +211,7 @@ def calcular_recalque_multiplos(Q_m3h: float, diam_prim: str, diam_sec: str,
         'hf_prim': prim['hf_total'],
         'hf_sec': hf_sec_total,
         'segmentos': segmentos,
-        'L_eq_total': prim['L_eq'] + L_eq_sec
+        'L_eq_total': L_eq_total
     }
 
 
