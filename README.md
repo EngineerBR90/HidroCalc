@@ -5,6 +5,7 @@ Dimensionamento de sistemas hidráulicos para piscinas de acordo com norma brasi
 - Módulo Filtragem
 - Módulo Transbordo
 - Módulo Hidromassagem
+- Módulo Aquecimento (Bomba de Calor Sodramar)
 - Módulo Perda de carga
 - Memória de cálculo e referencial teórico
 - Database de equipamentos

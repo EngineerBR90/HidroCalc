@@ -72,7 +72,26 @@ Baseado na quantidade de dispositivos e vazão nominal.
 
 ---
 
-## 5. Módulo: Perda de Carga (Darcy-Weisbach)
+## 5. Módulo: Aquecimento (Trocador de Calor)
+
+Calcula a necessidade térmica da piscina e seleciona o trocador de calor Sodramar.
+
+1.  **Entradas Principais:**
+    *   Dimensões ($L, W, D$) e Temperatura Desejada ($T_{\text{água}}$).
+    *   Região Climática (Fatores Climáticos e Temperaturas Médias).
+    *   Condições: Vento, Incidência Solar e Horas de Capa Térmica.
+2.  **Cálculo da Energia Dissipada ($E_{\text{btu/h}}$):**
+    *   $E_{\text{btu/h}} = \text{Perda}_{\text{base}} \cdot F_{\text{capa}} \cdot F_{\text{vento}} \cdot F_{\text{solar}} \cdot \text{Área}$
+3.  **Critérios de Seleção:**
+    *   **Capacidade:** $Capacidade_{\text{modelo}} \ge E_{\text{btu/h}}$
+    *   **Tempo de Uso:** O equipamento deve suprir a demanda operando no máximo 17 horas/dia no inverno.
+4.  **Consumo e Economia:**
+    *   $Consumo_{\text{real}} = \frac{Capacidade}{COP_{\text{real}}}$
+    *   Economia calculada em relação à resistência elétrica convencional (rendimento 80%).
+
+---
+
+## 6. Módulo: Perda de Carga (Darcy-Weisbach)
 
 Este é o cálculo mais complexo, realizado para cada trecho (Sucção e Recalque).
 
@@ -99,7 +118,7 @@ $$h_f = 1,05 \cdot \left( f \cdot \frac{L_{\text{total}}}{D} \cdot \frac{V^2}{2 
 
 ---
 
-## 6. Verificações de Norma (NBR 10.339)
+## 7. Verificações de Norma (NBR 10.339)
 
 Após os cálculos, compare a velocidade ($V$) com os limites:
 *   **Sucção:** $V \le 1,8 \text{ m/s}$

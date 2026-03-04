@@ -40,6 +40,7 @@ HidroCalc/
     ├── perda_carga.py    # Cálculo de Perda de Carga (Darcy/Colebrook)
     ├── memoria.py        # Geração de Memória de Cálculo
     ├── database_equipamentos.py # Consulta técnica ao catálogo
+    ├── aquecimento_sodramar.py # Módulo de Aquecimento (Bomba de Calor)
     └── report.py         # Relatórios administrativos (Kiara)
 ```
 
@@ -77,6 +78,7 @@ A aplicação diferencia-se pela precisão técnica, implementando:
 
 - **Filtragem**: Seleciona automaticamente o conjunto Filtro + Bomba adequado ao volume da piscina para ciclos de 6 ou 8 horas.
 - **Transbordo**: Calcula a vazão de lâmina de água baseada no comprimento da borda e seleciona a bomba para suprir essa vazão.
+- **Aquecimento**: Dimensiona trocadores de calor Sodramar replicando fielmente a lógica da planilha oficial, considerando região climática, vento, incidência solar e uso de capa térmica.
 - **Perda de Carga**: Módulo complexo que permite montar o traçado hidráulico (comprimento, diâmetro e conexões) e calcula a perda total (MCA), verificando limites de velocidade por norma.
 - **Memória de Cálculo**: Documenta todas as fórmulas e constantes utilizadas, servindo como auditoria técnica dos resultados apresentados.
 
@@ -142,6 +144,7 @@ HidroCalc/
     ├── perda_carga.py          # Head Loss Calculation (Darcy/Colebrook)
     ├── memoria.py              # Calculation Report Generator
     ├── database_equipamentos.py # Technical catalog query
+    ├── aquecimento_sodramar.py # Heating Module (Heat Pump)
     └── report.py               # Administrative reports (Kiara)
 
 
@@ -196,6 +199,9 @@ Filtration (filtragem.py): Automatically selects the appropriate Filter + Pump s
 
 
 Infinity Edge (transbordo.py): Calculates overflow sheet flow rate based on edge length and selects the pump required to supply this flow.
+
+
+Heating (aquecimento_sodramar.py): Sizes Sodramar heat pumps by faithfully replicating official worksheet logic, considering climatic region, wind, solar incidence, and thermal cover usage.
 
 
 Head Loss (perda_carga.py): Advanced module that models the hydraulic layout (length, diameter, fittings) and computes total head loss (mH₂O), verifying velocity limits according to standards.
