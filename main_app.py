@@ -9,7 +9,8 @@ from modules import (
     hidromassagem,
     perda_carga,
     memoria,
-    database_equipamentos
+    database_equipamentos,
+    aquecimento_sodramar
 )
 
 def main():
@@ -105,7 +106,7 @@ def main():
     elif st.session_state.current_page == "Cascatas":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
-        st.warning("Módulo em desenvolvimento! 🚧")
+        aquecimento_sodramar.run()
     elif st.session_state.current_page == "Memória de cálculo":
         memoria.run()
     elif st.session_state.current_page == "Database equipamentos":
