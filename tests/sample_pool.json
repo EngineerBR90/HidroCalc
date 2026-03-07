@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "model_name": "piscina_teste",
+    "export_date": "2026-03-06",
+    "units": "meters"
+  },
+  "tanks": [
+    {
+      "id": "piscina",
+      "regions": [
+        {
+          "label": "fundo",
+          "area_m2": 35.78,
+          "depth_m": 1.50,
+          "volume_m3": 53.67,
+          "face_persistent_id": "face_fundo_001",
+          "vertices": [
+            [0.0, 0.0, -1.5],
+            [8.0, 0.0, -1.5],
+            [8.0, 4.4725, -1.5],
+            [0.0, 4.4725, -1.5]
+          ]
+        },
+        {
+          "label": "prainha",
+          "area_m2": 7.68,
+          "depth_m": 0.20,
+          "volume_m3": 1.54,
+          "face_persistent_id": "face_prainha_001",
+          "vertices": [
+            [0.0, 4.4725, -0.2],
+            [3.5, 4.4725, -0.2],
+            [3.5, 6.6668, -0.2],
+            [0.0, 6.6668, -0.2]
+          ]
+        }
+      ],
+      "total_area_m2": 43.46,
+      "total_volume_m3": 55.21,
+      "edges": [
+        {
+          "label": "borda_infinita",
+          "length_m": 7.00,
+          "persistent_id": "edge_bi_001"
+        },
+        {
+          "label": "borda_prainha",
+          "length_m": 3.50,
+          "persistent_id": "edge_bp_001"
+        }
+      ]
+    },
+    {
+      "id": "cocho",
+      "regions": [
+        {
+          "label": "cocho",
+          "area_m2": 3.40,
+          "depth_m": 0.40,
+          "volume_m3": 1.36,
+          "face_persistent_id": "face_cocho_001",
+          "vertices": []
+        }
+      ],
+      "total_area_m2": 3.40,
+      "total_volume_m3": 1.36,
+      "edges": []
+    }
+  ],
+  "walllines": [],
+  "device_placements": []
+}
