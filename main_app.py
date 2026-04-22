@@ -11,7 +11,7 @@ from modules import (
     memoria,
     database_equipamentos,
     aquecimento,
-    dimensionamento_completo
+#    dimensionamento_completo
 )
 
 def main():
@@ -38,7 +38,7 @@ def main():
             "Selecione o módulo:",
             [
                 "Menu Principal",
-                "Dimensionamento Completo",
+#                "Dimensionamento Completo",
                 "Filtragem",
                 "Transbordo",
                 "Hidromassagem",
@@ -97,8 +97,8 @@ def main():
     # Page Content
     if st.session_state.current_page == "Menu Principal":
         show_home()
-    elif st.session_state.current_page == "Dimensionamento Completo":
-        dimensionamento_completo.run()
+#    elif st.session_state.current_page == "Dimensionamento Completo":
+#        dimensionamento_completo.run()
     elif st.session_state.current_page == "Filtragem":
         filtragem.run()
     elif st.session_state.current_page == "Transbordo":
@@ -122,7 +122,7 @@ def show_home():
     ### Ferramentas para dimensionamento de sistemas hidráulicos para piscinas
 
     **Recursos Disponíveis:**
-    - Dimensionamento Completo — importação de JSON do SketchUp para dimensionamento automático de todos os sistemas
+#    - Dimensionamento Completo — importação de JSON do SketchUp para dimensionamento automático de todos os sistemas
     - Sistema de filtragem com seleção automática de conjunto Filtro+MB
     - Cálculo de vazão necessária para sistemas de transbordo (borda infinita)
     - Dimensionamento de motobombas para sistema de Hidromassagem
