@@ -8,6 +8,36 @@ from tracking import track_access
 from modules.data import BANCO_BOMBAS
 from modules.calc_utils import ajustar_curva_pchip
 
+def calcular_parametros_transbordo(altura_lamina_mm: float, comprimento_borda_m: float, area_piscina_m2: float) -> Dict[str, float]:
+    """
+    Calcula os parâmetros técnicos para o sistema de transbordo.
+    """
+    volume_cocho_litros: float = area_piscina_m2 * (altura_lamina_mm / 1000) * 3 * 1000
+    area_lamina_m2: float = (altura_lamina_mm / 1000) * comprimento_borda_m
+    vazao_necessaria: float = (1608 * (altura_lamina_mm / 1000) * comprimento_borda_m) * math.sqrt(2 * 9.81 * (altura_lamina_mm / 1000))
+    
+    return {
+        "volume_cocho_litros": volume_cocho_litros,
+        "area_lamina_m2": area_lamina_m2,
+        "vazao_necessaria": vazao_necessaria
+    }
+
+
+def selecionar_bomba_transbordo(vazao_necessaria: float, pressao_mca: int) -> Optional[Dict[str, Any]]:
+    """
+    Seleciona a motobomba adequada para a vazão e pressão informadas.
+    """
+    selected_pump = None
+    for bomba in BANCO_BOMBAS:
+        key = f"vazao_{pressao_mca}_mca"
+        vazao_pump = bomba.get(key)
+        
+        if vazao_pump is not None and vazao_pump >= vazao_necessaria:
+            selected_pump = bomba
+            break
+    return selected_pump
+
+
 @track_access("transbordo")
 def run() -> None:
     """
@@ -31,7 +61,6 @@ def run() -> None:
                 min_value=1.0,
                 step=0.5,
                 format="%.1f"
-
             )
             comprimento_borda_m: float = st.number_input(
                 "Comprimento total da borda infinita (m)",
@@ -58,20 +87,14 @@ def run() -> None:
     # Cálculos e resultados
     if st.button("Calcular", type="primary"):
         with st.spinner("Calculando..."):
-            # Realiza cálculos
-            volume_cocho_litros: float = area_piscina_m2 * (altura_lamina_mm / 1000) * 3 * 1000
-            area_lamina_m2: float = (altura_lamina_mm / 1000) * comprimento_borda_m
-            vazao_necessaria: float = (1608 * (altura_lamina_mm / 1000) * comprimento_borda_m) * math.sqrt(2 * 9.81 * (altura_lamina_mm / 1000))
+            # Realiza cálculos usando a função extraída
+            params = calcular_parametros_transbordo(altura_lamina_mm, comprimento_borda_m, area_piscina_m2)
+            vazao_necessaria = params["vazao_necessaria"]
+            volume_cocho_litros = params["volume_cocho_litros"]
+            area_lamina_m2 = params["area_lamina_m2"]
             
-            # Seleção da bomba
-            selected_pump: Optional[Dict[str, Any]] = None
-            for bomba in BANCO_BOMBAS:
-                key = f"vazao_{pressao_mca}_mca"
-                vazao_pump = bomba.get(key)
-                
-                if vazao_pump is not None and vazao_pump >= vazao_necessaria:
-                    selected_pump = bomba
-                    break
+            # Seleção da bomba usando a função extraída
+            selected_pump = selecionar_bomba_transbordo(vazao_necessaria, pressao_mca)
             
             # Exibe resultados
             st.success("**Resultados do Dimensionamento**")

@@ -182,7 +182,7 @@ def calcular_recalque_multiplos(Q_m3h: float, diam_prim: str, diam_sec: str,
                 'Perda (mca)': hf_i
             })
 
-    hf_sec_total = hf_left + hf_right
+    hf_sec_total = max(hf_left, hf_right)
     all_velocities = [prim['V']] + velocidades_left + velocidades_right
     v_max = max(all_velocities) if all_velocities else prim['V']
     segmentos = segmentos_left + segmentos_right

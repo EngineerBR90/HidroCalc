@@ -5,6 +5,19 @@ from tracking import track_access
 from modules.data import BANCO_FILTROS
 
 
+def selecionar_filtro(volume: float) -> Optional[Dict[str, Any]]:
+    """
+    Seleciona o filtro adequado da linha FM baseado no volume da piscina.
+    """
+    filtro_selecionado = None
+    # Itera sobre os filtros ordenados por capacidade (volume_6h)
+    for filtro in sorted(BANCO_FILTROS, key=lambda x: x["volume_6h"]):
+        if filtro["volume_6h"] >= volume:
+            filtro_selecionado = filtro
+            break
+    return filtro_selecionado
+
+
 @track_access("filtragem")
 def run() -> None:
     """
@@ -29,14 +42,8 @@ def run() -> None:
     result_container = st.container()
     
     if st.button("Calcular", type="primary"):
-        # Seleção do filtro
-        filtro_selecionado: Optional[Dict[str, Any]] = None
-        
-        # Itera sobre os filtros ordenados por capacidade (volume_6h)
-        for filtro in sorted(BANCO_FILTROS, key=lambda x: x["volume_6h"]):
-            if filtro["volume_6h"] >= volume:
-                filtro_selecionado = filtro
-                break
+        # Seleção do filtro usando a função extraída
+        filtro_selecionado = selecionar_filtro(volume)
         
         if not filtro_selecionado:
             st.error("Nenhum filto da linha FM atende a este volume de piscina. "
