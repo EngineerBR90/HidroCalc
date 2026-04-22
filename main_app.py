@@ -122,7 +122,6 @@ def show_home():
     ### Ferramentas para dimensionamento de sistemas hidráulicos para piscinas
 
     **Recursos Disponíveis:**
-#    - Dimensionamento Completo — importação de JSON do SketchUp para dimensionamento automático de todos os sistemas
     - Sistema de filtragem com seleção automática de conjunto Filtro+MB
     - Cálculo de vazão necessária para sistemas de transbordo (borda infinita)
     - Dimensionamento de motobombas para sistema de Hidromassagem
