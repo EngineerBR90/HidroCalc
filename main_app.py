@@ -128,11 +128,11 @@ def show_home():
     - Banco de dados técnicos sobre equipamentos (Sodramar database)
     - Determinação da perda de carga com base na fórmula de Darcy com interações pelo método Newton-Raphson para Colebrook-White
     - Memória de cálculo listando todas as equações, fórmulas, verificações e constantes são utilizados nas funções do módulo perda de carga
+    - Aquecimento por trocador de calor elétrico com base na planilha de dimensionamento Sodramar
 
     **Módulos em desenvolvimento:**
     - Cascatas 
-    - Aquecimento por trocador de calor elétrico
-    """)
+        """)
 
 def run():
     main()
