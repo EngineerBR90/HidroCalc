@@ -106,7 +106,7 @@ def main():
     elif st.session_state.current_page == "Hidromassagem":
         hidromassagem.run()
     elif st.session_state.current_page == "Perda de carga":
-        perda_carga.main()
+        st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Cascatas":
         st.warning("Módulo em desenvolvimento! 🚧")
     elif st.session_state.current_page == "Aquecimento":
@@ -131,7 +131,8 @@ def show_home():
     - Aquecimento por trocador de calor elétrico com base na planilha de dimensionamento Sodramar
 
     **Módulos em desenvolvimento:**
-    - Cascatas 
+    - Cascatas
+    - Perda de carga
         """)
 
 def run():
